@@ -29,7 +29,7 @@ The file **DR_robot_routing_simulate.py** implements the simulation environment 
 - DR-FREE Algorithm:
 The first part of the code implements the DR-FREE algorithm given in the manuscript and generates robot trajectory data.
 
-- Inverse Problem:
+- Belief update:
 The second part of the code uses these data files to estimate the cost of the agent using the belief update algorithm of the manuscript. 
 We define a function that forms the feature vector.  
 Next, we obtain the *Weights_DR.npy* by solving the convex belief update problem. The figure below shows the placement of the feature points on the Robotarium work area with corresponding weight values.
