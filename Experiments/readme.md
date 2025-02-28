@@ -31,7 +31,6 @@ The first part of the code implements the DR-FREE algorithm given in the manuscr
 
 - Belief update:
 The second part of the code uses these data files to estimate the cost of the agent using the belief update algorithm of the manuscript. 
-We define a function that forms the feature vector.  
-Next, we obtain the *Weights_DR.npy* by solving the convex belief update problem. The figure below shows the placement of the feature points on the Robotarium work area with corresponding weight values.
+We define a function that forms the feature vector.  Next, we obtain the *Weights_DR.npy* by solving the convex belief update problem. The figure below shows the placement of the feature points on the Robotarium work area with corresponding weight values.
 ![feature_point_grid](https://github.com/user-attachments/assets/6343edfe-0184-40e6-adbe-07ec5cc66e04)
 We use the weights to formulate the estimated cost and test the effectiveness of the estimated cost by performing the robot routing cost while avoiding obstacles. 
