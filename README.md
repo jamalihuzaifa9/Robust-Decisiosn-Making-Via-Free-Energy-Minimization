@@ -42,14 +42,10 @@ Figure. Top-left: cost for the FOC problem. Top-right: robot trajectories when t
 - Experimental results:
 
 The following videos show robotarium robot performing the task:
-  - When the control policy using Algoritm 1 is applied while knowing the actual cost.
+  - When the control policy is obtained using DR-FREE Algoritm.
 
+https://github.com/user-attachments/assets/41724483-9ade-4a6b-89b8-fd4c7bf963fa
 
-https://github.com/Yakub-Jesawada/Wikipedia/assets/98798839/47b78536-bfd8-49af-9510-6fd19da477d2
-
-  - When the control policy using Algoritm 1 is applied while estimating the cost using Algorithm 2 given in [link](https://github.com/GIOVRUSSO/Control-Group-Code/blob/master/Inverse_Data-Driven_Probabilistic_Optimal_Control/Paper_preprint.pdf).
-
-https://github.com/Yakub-Jesawada/Wikipedia/assets/98798839/1dd524f3-55cf-4940-bd06-dd39ce451534
 
 
 
