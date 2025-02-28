@@ -7,11 +7,11 @@ To run the code, the first step is to download and install the [robotarium pytho
 The **Experiments** folder contains the following files:
 
 - Code Files:
-  - *DR_robot_routing_simulate.py*: The code file implements the robot routing task and can be used to perform physical experiment on the robotarium platform. 
+  - *DR_robot_routing_simulate.py*: The code file implements the DR-FREE Algorithm and performs the robot routing task. The code can be submitted to the robotarium platform. 
   - *DR_robot_routing_IOC.ipynb*: The notebook implements the robot routing experiment by solving the forward and inverse using the algorithms given in the manuscript.
-  - *GP_Model_Training.ipynb*: The code file implements the robot routing task and can be used to perform physical experiment on the robotarium platform.
-  -  *eta_policy.ipynb*:
-  - *Robo_Dataset_Generate.py*: The notebook implements the robot routing experiment for scenario 1 of the manuscript by solving the routinh problem for the continuous state\action space by      using the Gaussian policy derived in equation (11) of the manuscript.
+  - *GP_Model_Training.ipynb*: The notebook contains code to train GP models.
+  -  *eta_policy.ipynb*: The notebook evaluates the policy computation of DR-FREE algorithm under varying ambiguity radius.
+  - *Robo_Dataset_Generate.py*: The code file generates data for training GP models.
 - Binaries:
   - *GP_nominal_1.dump*: Stores GP model for training stage 1.
   - *GP_nominal_2.dump*: Stores GP model for training stage 2.
