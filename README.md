@@ -25,10 +25,11 @@ We present the simulation and experimental results given in the manuscript.
 
   ![Screenshot 2025-02-28 105328](https://github.com/user-attachments/assets/deea8cb1-bfe5-4427-a46b-b7f25b9a1af4)
 
-Figure. Top-left: robot trajectories starting from different initial positions (⋆) when the policy in (11) - (12) is used (with N = 1). Top-right: the oi’s together with the weights obtained via Algorithm 2. Bottom: reconstructed cost (left) and robot trajectories when Algorithm 1 is used with this cost. The robot starts from initial positions that are different from those in the top panel.
+Figure. At every training stage, we compare DR-FREE with a free-energy minimizing agent that, while making optimal decisions, does not account for ambiguity. With identical starting positions across experiments, DR-FREE consistently guides the robot to complete its task, whereas the ambiguity-unaware agent fails.
 
-  ![Screenshot 2025-02-28 105424](https://github.com/user-attachments/assets/4b17a438-6457-4931-bad9-7031e62b3f3d)
+  ![Screenshot 2025-02-28 140146](https://github.com/user-attachments/assets/41696956-ca99-4943-b0fe-c6c7371c90e8)
 
+Figure. (left panel) The nonconvex state cost for the navigation task. (right panel) Reconstructed cost using the belief updating algorithm.
 
 - Experimental results:
 
