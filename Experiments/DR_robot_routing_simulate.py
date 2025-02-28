@@ -19,7 +19,7 @@ from matplotlib.ticker import LinearLocator
 from sklearn.gaussian_process import GaussianProcessRegressor 
 from multiprocessing import Pool
 
-control_space_size = 3 # define action space size
+control_space_size = 5 # define action space size
 
 U_space_1 = np.array(np.linspace((-0.5),(0.5),control_space_size)) # define action space for 1st input
 U_space_2 = np.array(np.linspace((-0.5),(0.5),control_space_size)) # define action sppace for 2nd input
