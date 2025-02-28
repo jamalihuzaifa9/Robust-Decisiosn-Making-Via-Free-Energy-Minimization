@@ -1,19 +1,22 @@
-# Robotarium 
+# Experiments
 
 This folder contains the code required to perform the robot routing experiments as given in the manuscript ([see this link](https://arxiv.org/abs/2306.13928) for the preprint).
 ### Prerequisites
-To the run code, the first step is to download and install the [robotarium python simulator package](https://github.com/robotarium/robotarium_python_simulator). Next, copy the files named *robot_routing_IOC.ipynb*, *robot_routing_simulate.py*, and *Weights_Obtained.npy* to the same folder.
+To run the code, the first step is to download and install the [robotarium python simulator package](https://github.com/robotarium/robotarium_python_simulator).
 ### Contents 
-The Robotarium folder contains the following files:
+The **Experiments** folder contains the following files:
 
 - Code Files:
-  - *robot_routing_IOC.ipynb*: The notebook implements the robot routing experiment by solving the forward and inverse using the algorithms given in the manuscript.
-  - *robot_routing_simulate.py*: The code file implements the robot routing task and can be used to perform physical experiment on the robotarium platform.
-  - *robot_routing_continuous.ipynb*: The notebook implements the robot routing experiment for scenario 1 of the manuscript by solving the routinh problem for the continuous state\action space by using the Gaussian policy derived in equation (11) of the manuscript.
+  - *DR_robot_routing_simulate.py*: The code file implements the robot routing task and can be used to perform physical experiment on the robotarium platform. 
+  - *DR_robot_routing_IOC.ipynb*: The notebook implements the robot routing experiment by solving the forward and inverse using the algorithms given in the manuscript.
+  - *GP_Model_Training.ipynb*: The code file implements the robot routing task and can be used to perform physical experiment on the robotarium platform.
+  -  *eta_policy.ipynb*:
+  - *Robo_Dataset_Generate.py*: The notebook implements the robot routing experiment for scenario 1 of the manuscript by solving the routinh problem for the continuous state\action space by      using the Gaussian policy derived in equation (11) of the manuscript.
 - Binaries:
-  - *State_Data.npy*: Stores state trajectory data of the agent performing task with known actual cost.
-  - *Input_Data.npy*: Stores control input trajectory data of the agent performing task with known actual cost.
-  - *Weights_Obtained.npy*: Stores the weights obtained that can replicate the results in the manuscript.
+  - *GP_nominal_1.dump*: Stores GP model for training stage 1.
+  - *GP_nominal_2.dump*: Stores GP model for training stage 2.
+  - *GP_nominal.dump*: Stores GP model for training stage 3.
+  - *Weights_DR.npy*: Stores the weights obtained for the reconstructed cost that can replicate the results in the manuscript.
 ### robot_routing_IOC.ipynb
 
 - Forward Problem:
