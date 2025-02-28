@@ -10,7 +10,7 @@ The **Experiments** folder contains the following files:
   - *DR_robot_routing_simulate.py*: The code file implements the DR-FREE Algorithm and performs the robot routing task. The code can be submitted to the robotarium platform. 
   - *DR_robot_routing_IOC.ipynb*: The notebook implements the robot routing experiment by solving the forward and inverse using the algorithms given in the manuscript.
   - *GP_Model_Training.ipynb*: The notebook contains code to train GP models.
-  -  *eta_policy.ipynb*: The notebook evaluates the policy computation of DR-FREE algorithm under varying ambiguity radius.
+  - *eta_policy.ipynb*: The notebook evaluates the policy computation of DR-FREE algorithm under varying ambiguity radius.
   - *Robo_Dataset_Generate.py*: The code file generates data for training GP models.
 - Binaries:
   - *GP_nominal_1.dump*: Stores GP model for training stage 1.
@@ -33,4 +33,15 @@ The first part of the code implements the DR-FREE algorithm given in the manuscr
 The second part of the code uses these data files to estimate the cost of the agent using the belief update algorithm of the manuscript. 
 We define a function that forms the feature vector.  Next, we obtain the *Weights_DR.npy* by solving the convex belief update problem. The figure below shows the placement of the feature points on the Robotarium work area with corresponding weight values.
 ![feature_point_grid](https://github.com/user-attachments/assets/6343edfe-0184-40e6-adbe-07ec5cc66e04)
-We use the weights to formulate the estimated cost and test the effectiveness of the estimated cost by performing the robot routing cost while avoiding obstacles. 
+We use the weights to formulate the estimated cost and test the effectiveness of the estimated cost by performing the robot routing cost while avoiding obstacles.
+
+### eta_policy.ipynb
+
+The notebook shows how DR-FREE policy changes as a function of the ambiguity radius $(\eta(x_{k-1},u_{k}))$
+![Screenshot 2025-02-28 105424](https://github.com/user-attachments/assets/28a42fd2-3c4d-4274-be8c-72d1ffd50d38)
+
+Figure. By increasing the radius of ambiguity $(\eta(x_{k-1},u_{k}))$, the DR-FREE policy (left) flattens to a uniform distribution (right).
+
+### GP_Model_Training.ipynb
+
+The notebook implements GP training by leveraging the *scikit-learn* library.
