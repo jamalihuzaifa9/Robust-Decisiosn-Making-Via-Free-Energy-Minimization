@@ -10,9 +10,12 @@ The following files are contained in this folder,
 
 ### IHMCE_MaxEnt_Comparison
 - Infinite Horizon Maximum Causal Entropy IRL:
-The code implements the maximum discounted causal Entropy (MDCE) Algorithm of the article 'Infinite Horizon Maximum Causal Entropy Inverse Reinforcement Learning' on the discrete case Robotarium. We discretize the state space to a 50$\times$50 grid. We define the class for soft-value iteration with 0.9 as the discount factor. We define the cost feature set as defined in the manuscript. We define the function to calculate the expected feature value of the policy with actual and the policy with estimated cost. To compute the expected feature value for the estimated cost we utilize Monte-Carlo sampling with a sample size of 100. We use the expected feature value functions to optimize the corresponding feature weights using gradient ascent.
 
+The code implements the **Maximum Discounted Causal Entropy (MDCE) Algorithm** from the article *"Infinite Horizon Maximum Causal Entropy Inverse Reinforcement Learning"* in a discrete-state Robotarium environment. The state space is discretized into a **50×50 grid**, and a **soft-value iteration** class is defined using a **0.9 discount factor**. The cost feature set follows the definitions in the manuscript. To evaluate policy performance, the code computes the **expected feature values** for both the actual policy and the policy derived from the estimated cost. The expected feature values for the estimated cost are obtained via **Monte Carlo sampling** with a sample size of **100**. These values are then leveraged to optimize feature weights using **gradient ascent**, refining the learned cost representation.
 
+![Cost_Heat_Map_IHMCE](https://github.com/user-attachments/assets/528133f9-1713-436a-9087-a5ee3f2edd6a)
+
+Figure. Cost reconstructed by IHMCE algorithm. 
 
 Note: We implemented the benchmarking algorithm (IHMCE) as efficiently as possible. 
 
