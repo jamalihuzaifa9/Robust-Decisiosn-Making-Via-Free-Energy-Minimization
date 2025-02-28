@@ -17,50 +17,24 @@ The **Experiments** folder contains the following files:
   - *GP_nominal_2.dump*: Stores GP model for training stage 2.
   - *GP_nominal.dump*: Stores GP model for training stage 3.
   - *Weights_DR.npy*: Stores the weights obtained for the reconstructed cost that can replicate the results in the manuscript.
-### robot_routing_IOC.ipynb
+
+### robot_routing_simulate.py
+
+The file **DR_robot_routing_simulate.py** implements the simulation environment for the DR-FREE framework on a robot routing task. It loads a pre-trained Gaussian Process model to predict nominal state transitions and defines dynamic models, cost functions, and robust control steps that integrate obstacle avoidance, goal attainment, and environmental uncertainties. Leveraging the Robotarium simulation tools the script simulates robot navigation within a bounded workspace populated with obstacles and boundaries. Throughout the simulation, it records state trajectories and control inputs, which are then saved for further analysis.
+
+- The file also implements an ambiguity-unaware agent, the control algorithm can be switched by commenting out the DR-FREE algorithm at lines 318 and 319, and uncommenting lines 322.
+
+### DR_robot_routing_IOC.ipynb
 
 - Forward Problem:
-Given the setup of the experiment in the manuscript, the first part of the code solves the forward problem/task of robot routing while avoiding obstacles using the control policy computed by Algorithm 1 of the manuscript. The original state cost $c(\textbf{x}_{k})$ is defined as:
-
-![CodeCogsEqn (12)](https://github.com/GIOVRUSSO/Control-Group-Code/assets/62793703/8a2656ec-2e19-46dd-9b37-158162b6cf61)
-
-where,
-
-![equation](https://latex.codecogs.com/png.image?\large&space;\dpi{110}\bg{white}g_{i}(\mathbf{x}_{k}):=\frac{1}{\sqrt{{(2\pi)^{2}\det(\mathbf{\Sigma}_o)}}}\exp\left(-\frac{1}{2}(\mathbf{x}_{k}-\mathbf{o}_{i})^\top\mathbf{\Sigma}_o^{-1}(\mathbf{x}_{k}-\mathbf{o}_{i})\right)),
-
-with 
-
-![equation](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D%5Cbg%7Bwhite%7D%5Cmathbf%7B%5CSigma%7D_o=%5Cbegin%7Bbmatrix%7D0.025&0%5C%5C0&0.025%5C%5C%5Cend%7Bbmatrix%7D), 
-
-and $\mathbf{o}_{i}$ being the coordinates of the barycenter of the $i$-{th} obstacle.
-
-![CodeCogsEqn (11)](https://github.com/GIOVRUSSO/Control-Group-Code/assets/62793703/d9b7e1f3-71b0-4504-8660-5d4984cf9076)
-
-with $b_{x_j}$ and $b_{y_j}$ representing the $j_{th}$ component of the boundary coordinates $b_{x}=[-1.5,1.5]$ and $b_{y}=[-1,1]$, respectively, and $\sigma=0.02$ represents the standard deviation of the normal distribution.
-
-Multiple state and control input trajectories of a robot performing the task are obtained and saved in the *State_Data.npy* and *Input_Data.npy*. 
+Given the setup of the experiment in the manuscript, the first part of the code solves the forward problem/task of robot routing while avoiding obstacles using the control policy computed by the DR-FREE Algorithm of the manuscript. Multiple state and control input trajectories of a robot performing the task are obtained and saved in the *State_Data.npy* and *Input_Data.npy*. 
 
 - Inverse Problem:
 The second part of the code uses these data files to estimate the cost of the agent using Algorithm 2 of the manuscript. 
 We define a function that forms the feature vector. We used a 16-dimensional features vector, with the first feature being, $$(x_{k}-x_{d})^{2}$$  the distance from the desired location of the robot,
 and with the other features being Gaussians of the form $g_{i}(\textbf{x}_{k})$, centered around 15 uniformly distributed points in the Robotarium work area. 
-Next, we obtain the *weights.npy* by solving the inverse problem. The figure below shows the placement of the feature points on the Robotarium work area with corresponding weights value.
-![feature_point_grid](https://github.com/GIOVRUSSO/Control-Group-Code/assets/62793703/d50ee3e0-3e3b-4595-b5fc-a3305e843b08)
+Next, we obtain the *Weights_DR.npy* by solving the inverse problem. The figure below shows the placement of the feature points on the Robotarium work area with corresponding weight values.
+![feature_point_grid](https://github.com/user-attachments/assets/6343edfe-0184-40e6-adbe-07ec5cc66e04)
 We use the weights to formulate the estimated cost and test the effectiveness of the estimated cost by performing the robot routing cost while avoiding obstacles. The plots in Figure 3 of the manuscripts can be obtained from the last section of the code.
 
 Note: To replicate Figure 3 of the manuscript use the *Weights_Obtained.npy*, *State_Data*, and *Input_Data* files.
-
-### robot_routing_simulate.py
-
-This file simulated the robot performing the obstacle avoidance task. Unlike *robot_routing_IOC.ipynb*, we can visualize the agent performing the task using this code. We provide *Weights.npy* as an input and compute the policy of the agent. Apply the input sampled from the policy and continue this process till the task of reaching the goal is completed. We can also obtain state and input trajectory data as a .npy file. 
-
-Apart from simulation, this code file can also be used to perform hardware experiments. Just upload the *robot_routing_simulate.py* and *Weights.npy* files to the Robotarium portal and you can obtain the video of the robot performing the task.
-
-### robot_routing_continuous.ipynb
-
-- Forward Problem:
-Given the setup of scenario 1 of the application example in the manuscript, the first part of the code solves the forward problem/task of robot routing considering a quadratic state cost and using the continuous action space control policy computed by equation (11) of the manuscript. Multiple state and control input trajectories of a robot performing the task are obtained and shown in the top left panel in Figure 4 of the manuscript. 
-
-- Inverse Problem:
-The second part of the code uses these data files to estimate the cost of the agent using Algorithm 2 of the manuscript. 
-We define a function that forms the feature vector. We used a 15-dimensional features vector, with the feature being, $$(x_{k}-x_{i})^{2}$$  the distance from the location point $x_{i}$ of located at 15 uniformly spread points on the robotarium work area.
