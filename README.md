@@ -2,13 +2,17 @@
 ### Introduction
 This repository collects the supporting code for the manuscript **DR-FREE: Installing Robustness In Optimal Decisions Via  Free Energy Minimization**. The manuscript discusses the challenge of ensuring the robust performance of autonomous agents amidst environmental and training ambiguities. We introduce DR-FREE, an energy-based computational model that embeds robustness directly into decision-making via free energy minimization. By leveraging a distributionally robust extension of the free energy principle, DR-FREE yields policies that are both optimal and resilient against uncertainty, as demonstrated through real rover experiments.
 ### Contents
-The following list of directories can be found in the repository, which reproduces the simulation and experimental results given in the manuscript.
-- Robotarium:
-  - This folder contains the code files required to replicate the results of the robot routing example given in the manuscript.
-- Benchmarking:
-  - This folder contains the code files required for replicating the results of benchmarking Algorithm 2 given in the manuscript.
-- Assets:
-  - Contains plots, plot data and video from Robotarium platform    
+The following list of directories can be found in the repository, reproducing the simulation and experimental results in the manuscript.
+- Experiments:
+  - The folder contains our DRFREE implementation for the Robotarium experiments.
+  - The folder also contains:
+    - Code for ambiguity unaware agent.
+    - Gaussian Process (GP) models and the code to train GP models.
+    - Code to reconstruct the cost using trajectory data.  
+- Belief Update Benchmark:
+  - This folder contains the code files required to replicate the belief update benchmarking results. 
+- Assets
+  - contains all the plots of the manuscript, the data from the experiments used to generate these plots, and the Robotarium movie. 
 
 ### Results
 We present the simulation and experimental results given in the manuscript.
