@@ -42,7 +42,7 @@ time_step = 0.033
 # else:
 #     print(f"Failed to download the file. Status code: {response.status_code}")
 
-GP_nominal= pickle.load(open(r'D:\Network Security\KL Control\robotarium_python_simulator\rps\examples\DR_FREE\Robotarium Example\GP_nominal_1.dump','rb'))
+GP_nominal= pickle.load(open(r'D:\Network Security\KL Control\robotarium_python_simulator\rps\examples\DR_FREE\Experiments\GP_nominal_1.dump','rb'))
 
 
 WIND_DIRECTION = np.array([1, 1])  # Wind blowing in both positive x and y directions
@@ -283,7 +283,7 @@ def Control_step(state,U_space_1,U_space_2,goal_points,obs_points):
     Returns:
         array: Action
     """
-
+    exponent = np.zeros((control_space_size,control_space_size)) #Initialize pf
     pf = np.zeros((control_space_size,control_space_size)) #Initialize pf
     for i in range(control_space_size):
         for j in range(control_space_size):
@@ -314,17 +314,18 @@ def Control_step(state,U_space_1,U_space_2,goal_points,obs_points):
             
             cost = [state_cost(next_sample[i,:],goal_points,obs_points) for i in range(N_samples)]
             
-            # DR algorithm 
+            # DR algorithm ##########################################
             c_t = C_tilde(cost,eta,nominal_prob,reference_prob)
-            log_DKL = np.exp(-eta-c_t)
+            exponent[i,j] = -eta-c_t
+            ###########################################################
             
-            # uncomment following line to implement FPD, and comment line no. 370 and 371
-            # log_DKL = np.exp(-DKL-np.sum(cost)/N_samples)
-            
-            if log_DKL == 0.0:
-                log_DKL = 1e-10
-                 
-            pf[i,j] = log_DKL
+            # uncomment following line to implement FPD, and comment line no. 318 and 319
+            # exponent[i,j] = -DKL-np.sum(cost)/N_samples
+
+    
+    exp_max = np.max(exponent)
+    pf = np.exp(exponent-exp_max)
+    S2 = np.sum(pf) #Normalize resulting policy
     S2 = np.sum(pf) #Normalize resulting policy
 
     pf = np.array([x/S2 for x in pf])
@@ -348,17 +349,12 @@ goal_points = np.array(np.mat('-1.4; -0.8; 0')) # you can change the goal points
 # obstacle points defined here the the first elements before first ';' are the x axis coordinates and 2 set of elements are y axis co-ordinates (3rd set it is for pose we leave it to zero)
 obs_points = np.array(np.mat('0 0 0 0 0 -0.8;0 0.2 0.4 0.6 0.8 -0.8;0 0 0 0 0 0'))
 
-# Define work area corner points
-wall_points_x = np.array([-1.4,1.4])
-wall_points_y = np.array([-1.0,1.0])
-
-
 # Instantiate Robotarium object
 N = 1
-M = 1
+M = 4
 
-initial_conditions = [np.array(np.mat('1.3;0.9; 0')),np.array(np.mat('0.2;0.9; 0')),np.array(np.mat('1.3;-0.5; 0')),np.array(np.mat('-1.0;0.8; 0'))]
-# initial_conditions = [np.array(np.mat('1.32;0.9; 0')),np.array(np.mat('0.5;-0.2; 0')),np.array(np.mat('1.2;-0.5; 0')),np.array(np.mat('-0.5;0.25; 0'))] # can change robot initial condition in this line
+# initial_conditions = [np.array(np.mat('1.3;0.9; 0')),np.array(np.mat('0.2;0.9; 0')),np.array(np.mat('1.3;-0.5; 0')),np.array(np.mat('-1.0;0.8; 0'))]
+initial_conditions = [np.array(np.mat('1.32;0.9; 0')),np.array(np.mat('0.5;-0.2; 0')),np.array(np.mat('1.2;-0.5; 0')),np.array(np.mat('-0.5;0.25; 0'))] # can change robot initial condition in this line
 # initial_conditions = [np.array(np.mat('1.0;0.8; 0')),np.array(np.mat('0.5;-0.2; 0')),np.array(np.mat('-0.5;-0.5; 0')),np.array(np.mat('-0.9;0.25; 0'))] # can change robot initial condition in this line
 # initial_conditions = [np.array(np.mat('-1.1;0.9; 0')),np.array(np.mat('0.9;-0.2; 0')),np.array(np.mat('-0.7;0.5; 0')),np.array(np.mat('-0.5;0.25; 0'))]
 
@@ -459,6 +455,10 @@ for I in range(M):
             break
         
         if is_inside_rectangle(x_si, [-0.25,-0.25],[0.15,0.85] ):
+            print(f"State entered the rectangle at: {x_si}")
+            break
+        
+        if is_inside_rectangle(x_si, [-1.25,-1.0],[-0.51,-0.6]):
             print(f"State entered the rectangle at: {x_si}")
             break
         
