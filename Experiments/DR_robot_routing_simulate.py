@@ -21,8 +21,8 @@ from multiprocessing import Pool
 
 control_space_size = 5 # define action space size
 
-U_space_1 = np.array(np.linspace((-0.5),(0.5),control_space_size)) # define action space for 1st input
-U_space_2 = np.array(np.linspace((-0.5),(0.5),control_space_size)) # define action sppace for 2nd input
+U_space_1 = np.array(np.linspace((-1.5),(1.5),control_space_size)) # define action space for 1st input
+U_space_2 = np.array(np.linspace((-1.5),(1.5),control_space_size)) # define action sppace for 2nd input
 
 
 time_step = 0.033
@@ -307,9 +307,8 @@ def Control_step(state,U_space_1,U_space_2,goal_points,obs_points):
             reference_prob = reference_pdf/np.sum(reference_pdf)
            
             
-            
-            eta = np.clip(calculate_kl_divergence(goal_points[:-1].reshape((2,)),cov_reference,next_state_nominal.T.reshape((2,)),cov_nom),0.0,100.0)
-            
+            eta = np.clip(calculate_kl_divergence(goal_points[:-1].reshape((2,)),cov_reference,next_state_nominal.T.reshape((2,)),cov_nom),0.0,100.)
+            # eta = calculate_kl_divergence(goal_points[:-1].reshape((2,)),cov_reference,next_state_nominal.T.reshape((2,)),cov_nom)
             DKL = calculate_kl_divergence(next_state_nominal.T.reshape((2,)),cov_nom,goal_points[:-1].reshape((2,)),cov_reference)
             
             cost = [state_cost(next_sample[i,:],goal_points,obs_points) for i in range(N_samples)]
@@ -353,8 +352,8 @@ obs_points = np.array(np.mat('0 0 0 0 0 -0.8;0 0.2 0.4 0.6 0.8 -0.8;0 0 0 0 0 0'
 N = 1
 M = 4
 
-# initial_conditions = [np.array(np.mat('1.3;0.9; 0')),np.array(np.mat('0.2;0.9; 0')),np.array(np.mat('1.3;-0.5; 0')),np.array(np.mat('-1.0;0.8; 0'))]
-initial_conditions = [np.array(np.mat('1.32;0.9; 0')),np.array(np.mat('0.5;-0.2; 0')),np.array(np.mat('1.2;-0.5; 0')),np.array(np.mat('-0.5;0.25; 0'))] # can change robot initial condition in this line
+initial_conditions = [np.array(np.mat('1.32;0.9; 0.')),np.array(np.mat('0.2;0.9; 0')),np.array(np.mat('1.3;-0.5; 0')),np.array(np.mat('-1.0;0.8; 0'))]
+# initial_conditions = [np.array(np.mat('1.32;0.9; 0')),np.array(np.mat('0.5;-0.2; 0')),np.array(np.mat('1.2;-0.5; 0')),np.array(np.mat('-0.5;0.25; 0'))] # can change robot initial condition in this line
 # initial_conditions = [np.array(np.mat('1.0;0.8; 0')),np.array(np.mat('0.5;-0.2; 0')),np.array(np.mat('-0.5;-0.5; 0')),np.array(np.mat('-0.9;0.25; 0'))] # can change robot initial condition in this line
 # initial_conditions = [np.array(np.mat('-1.1;0.9; 0')),np.array(np.mat('0.9;-0.2; 0')),np.array(np.mat('-0.7;0.5; 0')),np.array(np.mat('-0.5;0.25; 0'))]
 
