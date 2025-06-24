@@ -45,4 +45,3 @@ Figure. By increasing the radius of ambiguity $(\eta(x_{k-1},u_{k}))$, the DR-FR
 ### GP_Model_Training.ipynb
 
 The notebook implements GP training by leveraging the *scikit-learn* library.
-
