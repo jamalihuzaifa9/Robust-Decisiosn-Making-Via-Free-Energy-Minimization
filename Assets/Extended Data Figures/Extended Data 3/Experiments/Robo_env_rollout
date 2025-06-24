@@ -1,0 +1,38 @@
+from Env_Robotarium import RobotariumEnv
+from Maxdiff import SimpleMaxDiff
+import numpy as np
+
+goal = np.array([[-1.4], [-0.8], [0.0]])
+obs = np.array([[0, 0, 0, 0, 0, -0.8],
+                [0, 0.2, 0.4, 0.6, 0.8, -0.8],
+                [0, 0, 0, 0, 0, 0]])
+
+def model_step(x, velocities, time_step=0.1):
+    """
+    Actual system dynamics model P(.)
+    
+    Args:
+        x (np.array): Current state (position)
+        velocities (np.array): Control velocities
+        time_step (float): Time step for integration
+    Returns:
+        np.array: Updated state (position)
+    """
+    poses = np.zeros((2, 1))
+    poses[0] = x[0] + time_step * velocities[0]
+    poses[1] = x[1] + time_step * velocities[1]
+    return poses
+
+env = RobotariumEnv(goal_points=goal, obs_points=obs,show_figure=True)
+
+agent = SimpleMaxDiff(model_fn=model_step, state_dim=2, action_dim=2,
+                            horizon=20, gamma=0.98, samples=50,
+                            alpha=15, lam=0.1)
+
+state = env.reset(init_state=np.array([[1.3], [0.9], [0.0]]))
+done = False
+while not done:
+    action = agent.rollout(state)  # Your MaxDiff agent
+    state, reward, done, _ = env.step(action)
+
+env.close()
