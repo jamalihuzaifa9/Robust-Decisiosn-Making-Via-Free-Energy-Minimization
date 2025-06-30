@@ -54,10 +54,5 @@ This folder contains the code files used for replicating the **MaxDiff Reinforce
   Configures optimizer settings and learning rate schedules.
 - **replaybuffer.py**  
   Stores agent transitions for experience replay.
-
----
-
-Each file contributes to evaluating the MaxDiff RL framework’s robustness, single-shot learning capability, and performance in embodied control tasks. The structure supports both simulated and real-time applications (e.g., in Robotarium).
-
 ---
 For theoretical background and derivations, please refer to the official MaxDiff paper linked above.
