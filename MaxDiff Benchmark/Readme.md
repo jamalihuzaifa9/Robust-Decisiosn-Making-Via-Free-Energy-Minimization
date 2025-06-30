@@ -20,9 +20,6 @@ This folder contains the code files used for replicating the **MaxDiff Reinforce
   Defines the custom Robotarium simulation environment.
 - **Maxdiff_Robotarium.py**  
   Runs MaxDiff RL in the Robotarium environment.
-- **Maxdiff_Robotarium_grid_s....py**  
-  Performs grid search over planning horizon and number of samples for Robotarium runs.
-
 ---
 
 ## MaxDiff Variants and Experiments
