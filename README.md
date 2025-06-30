@@ -7,11 +7,12 @@ The following list of directories can be found in the repository, reproducing th
   - The folder contains our DRFREE implementation for the Robotarium experiments.
   - The folder also contains:
     - Code for ambiguity unaware agent.
+    - Code for ambiguity unaware agent with backward recursion and cost-to-go computation.
     - Gaussian Process (GP) models and the code to train GP models.
     - Code to reconstruct the cost using trajectory data.  
 - Belief Update Benchmark:
   - This folder contains the code files required to replicate the belief update benchmarking results. 
-- MaxDiff Experiments:
+- MaxDiff Benchmark:
   - This folder contains the code files required to replicate the MaxDiff RL benchmarking results.
 - Assets
   - contains all the plots of the manuscript, the data from the experiments used to generate these plots, and the Robotarium movie. 
