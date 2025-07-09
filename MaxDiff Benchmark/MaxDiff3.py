@@ -5,9 +5,61 @@ from termcolor import cprint
 from entropy import get_entropy_params
 from utils import _batch_mv
 
-class SimpleMaxDiff:
+goal_points = np.array(np.mat('-1.4; -0.8; 0'))  # Modify as needed
+
+obs_points = np.array(np.mat('0 0 0 0 0 -0.8;0 0.2 0.4 0.6 0.8 -0.8;0 0 0 0 0 0'))
+
+
+def state_cost(state, goal_points=goal_points, obs_points=obs_points):
+    """
+    Compute a composite cost based on distance to the goal and proximity to obstacles.
+    
+    Args:
+        state (np.array): Current state
+        goal_points (np.array): Goal point(s)
+        obs_points (np.array): Obstacle points
+    Returns:
+        float: Combined state cost
+    """
+    def logpdf(x, u, covar):
+        """
+        Compute the Gaussian probability density (kernel) at x with mean u and covariance covar.
+        
+        Args:
+            x (np.array): Current state (vector)
+            u (np.array): Obstacle point (vector)
+            covar (np.array): Covariance matrix
+        Returns:
+            float: Gaussian PDF value
+        """
+        k = len(x)  # Dimensionality
+        diff = x - u
+        inv_covar = np.linalg.inv(covar)
+        exponent = -0.5 * (diff.T @ inv_covar @ diff)
+        denom = np.sqrt((2 * np.pi) ** k * np.linalg.det(covar))
+        pdf = np.exp(exponent) / denom
+        return pdf
+    
+    v = np.array([0.035, 0.035], dtype=np.float32)
+    covar = np.diag(v)
+    
+    gauss_sum = 0
+    for i in range(obs_points.shape[1]):
+        gauss_sum += 100 * logpdf(state[:2], obs_points[:2, i], covar)
+    
+    cost = (100 * ((state[0] - goal_points[0])**2 + (state[1] - goal_points[1])**2) +
+            gauss_sum +
+            10 * (np.exp(-0.5 * ((state[0] - (-1.5)) / 0.03)**2) / (0.03 * np.sqrt(2 * np.pi)) +
+                 np.exp(-0.5 * ((state[0] - 1.5) / 0.03)**2) / (0.03 * np.sqrt(2 * np.pi)) 
+                 +
+                 np.exp(-0.5 * ((state[1] - 1.0) / 0.03)**2) / (0.03 * np.sqrt(2 * np.pi)) +
+                 np.exp(-0.5 * ((state[1] - (-1.0)) / 0.03)**2) / (0.03 * np.sqrt(2 * np.pi))))
+    return cost
+
+
+class MaxDiff:
     def __init__(self, model_fn, state_dim, action_dim, samples=10, horizon=10,
-                 lam=0.5, alpha=0.1, eps=0.3, bound=1e10, gamma=1.0, device='cpu', use_real_env=False):     
+                 lam=1.0, alpha=0.01, eps=0.3, bound=1e10, gamma=1.0, device='cpu', use_real_env=False):     
 
         self.model = model_fn
         self.state_dim = state_dim
@@ -56,30 +108,37 @@ class SimpleMaxDiff:
 
             s = torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0).repeat(self.samples, 1)
             eta = torch.zeros(self.samples, self.action_dim, device=self.device)
+            states[0] = s
             
-            # if self.use_real_env:
-            #     s = state[None,:].repeat(self.samples,0)
-            #     self.model.set_state(s)
-            #     sk = []
-            #     states = []
-            # else:
-            #     if not self.tensor:
-            #         s0 = torch.FloatTensor(state).unsqueeze(0).to(self.device)
-            #         s = s0.repeat(self.samples, 1)
-            #     else:
-            #         s = state.repeat(self.samples, 1)
+            if self.use_real_env:    
+                for t in range(self.horizon-1):
+                    eps = self.noise_dist.sample()
+                    eta = 0.5 * eta + 0.5 * eps
+                    log_prob[t] = self.noise_dist.log_prob(eta).sum(1)
+                    da[t] = eta
 
-            for t in range(self.horizon):
-                states[t] = s
-                eps = self.noise_dist.sample()
-                eta = 0.5 * eta + 0.5 * eps
-                log_prob[t] = self.noise_dist.log_prob(eta).sum(1)
-                da[t] = eta
+                    actions = self.a[t].expand_as(eta) + eta
+                    
+                    for j in range(self.samples):
+                        # If using a real environment, set the state and get the reward
+                        next_state = self.model(states[t,j].cpu().numpy(), actions[j].cpu().numpy()).reshape(self.state_dim,)
+                        states[t+1, j] = torch.tensor(next_state, dtype=torch.float32, device=self.device)
+                        rewards = -state_cost(next_state)  # cost-to-reward
+                        rewards = torch.tensor(rewards, dtype=torch.float32, device=self.device)
+                        sk[t,j] = rewards.squeeze()
+            
+            else:
+                for t in range(self.horizon):
+                    states[t] = s
+                    eps = self.noise_dist.sample()
+                    eta = 0.5 * eta + 0.5 * eps
+                    log_prob[t] = self.noise_dist.log_prob(eta).sum(1)
+                    da[t] = eta
 
-                actions = self.a[t].expand_as(eta) + eta
-                s_next, _, rewards, done = self.model(s, actions)
-                s = torch.clamp(s_next, -self.bound, self.bound)
-                sk[t] = rewards.squeeze()
+                    actions = self.a[t].expand_as(eta) + eta
+                    s_next, _, rewards, done = self.model(s, actions)
+                    s = torch.clamp(s_next, -self.bound, self.bound)
+                    sk[t] = rewards.squeeze()
 
             sk_discounted = sk * self.gammas
             sk_total = sk_discounted.sum(0)
