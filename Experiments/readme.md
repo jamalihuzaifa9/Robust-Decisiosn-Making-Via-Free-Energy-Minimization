@@ -9,6 +9,7 @@ The **Experiments** folder contains the following files:
 - Code Files:
   - *DR_robot_routing_simulate.py*: The code file implements the DR-FREE Algorithm and performs the robot routing task. The code can be submitted to the robotarium platform. 
   - *DR_robot_routing_IOC.ipynb*: The notebook implements the robot routing experiment by solving the forward and inverse using the algorithms given in the manuscript.
+  - *FPD_robot_routing_simulate_recursion.py*: The code file implements the FPD Algorithm with backward recursion and performs the robot routing task.
   - *GP_Model_Training.ipynb*: The notebook contains code to train GP models.
   - *eta_policy.ipynb*: The notebook evaluates the policy computation of DR-FREE algorithm under varying ambiguity radius.
   - *Robo_Dataset_Generate.py*: The code file generates data for training GP models.
