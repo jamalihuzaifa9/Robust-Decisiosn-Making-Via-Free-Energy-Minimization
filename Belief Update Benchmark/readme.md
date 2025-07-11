@@ -2,6 +2,8 @@
 This folder contains all the necessary code required to implement the benchmark algorithm from the article titled
 **[Infinite Horizon Maximum Causal Entropy Inverse Reinforcement Learning](https://ieeexplore.ieee.org/document/7040156)**.
 
+The code builds on the code provided in [Link](https://github.com/GIOVRUSSO/Control-Group-Code/tree/master/Inverse_Data-Driven_Probabilistic_Optimal_Control/IHMCE_MaxEnt_Comparison).
+
 ### Contents 
 The following files are contained in this folder,
 
