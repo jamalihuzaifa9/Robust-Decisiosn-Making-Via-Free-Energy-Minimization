@@ -1,6 +1,6 @@
 # Belief Update Benchmark
 This folder contains all the necessary code required to implement the benchmark algorithm from the article titled
-> **[Infinite Horizon Maximum Causal Entropy Inverse Reinforcement Learning]([https://arxiv.org/html/2309.15293v4](https://ieeexplore.ieee.org/document/7040156))**.
+**[Infinite Horizon Maximum Causal Entropy Inverse Reinforcement Learning](https://ieeexplore.ieee.org/document/7040156)**.
 
 ### Contents 
 The following files are contained in this folder,
