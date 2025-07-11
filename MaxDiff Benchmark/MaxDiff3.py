@@ -121,9 +121,11 @@ class MaxDiff:
                     
                     for j in range(self.samples):
                         # If using a real environment, set the state and get the reward
-                        next_state = self.model(states[t,j].cpu().numpy(), actions[j].cpu().numpy()).reshape(self.state_dim,)
+                        test_input = np.hstack((states[t,j].cpu().reshape(-1,), actions[j].cpu().reshape(-1,))).reshape(1, -1)
+                        next_state, _ = self.model.predict(test_input,return_cov=True)
+                        # next_state = self.model(states[t,j].cpu().numpy(), actions[j].cpu().numpy()).reshape(self.state_dim,)
                         states[t+1, j] = torch.tensor(next_state, dtype=torch.float32, device=self.device)
-                        rewards = -state_cost(next_state)  # cost-to-reward
+                        rewards = -state_cost(np.reshape(next_state,(2,)))  # cost-to-reward
                         rewards = torch.tensor(rewards, dtype=torch.float32, device=self.device)
                         sk[t,j] = rewards.squeeze()
             

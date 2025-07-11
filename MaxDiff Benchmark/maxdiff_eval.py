@@ -17,7 +17,8 @@ from termcolor import cprint
 from Env_Robotarium import RobotariumEnv
 from nn_model import Model
 from nn_model import KnownRewardModel
-from MaxDiff3 import SimpleMaxDiff
+from MaxDiff3 import MaxDiff
+import pickle
 
 # %% Load Environment and Define Cost
 
@@ -66,6 +67,7 @@ model.load_state_dict(torch.load(r"D:\Network Security\KL Control\robotarium_pyt
 model.eval()
 print("\n✅ Loaded trained dynamics model with known reward.")
 
+GP_nominal = pickle.load(open(r'D:\Network Security\KL Control\robotarium_python_simulator\rps\examples\DR_FREE\Experiments\GP_nominal_1.dump','rb'))
 # %% JIT tracing for use in planner
 with torch.no_grad():
     inputs = (torch.rand(100, STATE_DIM, device=DEVICE),
@@ -73,8 +75,8 @@ with torch.no_grad():
     jit_model = torch.jit.trace(model, inputs)
 
 # %% Wrap in planner
-planner = SimpleMaxDiff(model_fn=jit_model, state_dim=STATE_DIM, action_dim=ACTION_DIM,
-                        horizon=20, gamma=0.95, samples=100, alpha=0.1, lam=1.0, device=DEVICE)
+planner = MaxDiff(model_fn=GP_nominal, state_dim=STATE_DIM, action_dim=ACTION_DIM,
+                        horizon=20, gamma=0.95, samples=100, alpha=0.1, lam=1.0, device=DEVICE, use_real_env=True)
 
 # %% Evaluate Policy on Multiple Initial Conditions
 initial_conditions = [ np.array(np.mat('1.32;0.9; 0')),np.array(np.mat('0.5;-0.2; 0')),np.array(np.mat('1.2;-0.5; 0')),np.array(np.mat('-0.5;0.25; 0')),

@@ -1,6 +1,5 @@
 import numpy as np
 
-
 goal_points = np.array(np.mat('-1.4; -0.8; 0'))  # Modify as needed
 
 obs_points = np.array(np.mat('0 0 0 0 0 -0.8;0 0.2 0.4 0.6 0.8 -0.8;0 0 0 0 0 0'))

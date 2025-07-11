@@ -362,6 +362,7 @@ XX = [0]*M
 UU = [0]*M
 XN = [0]*M
 COVN = [0]*M
+Time = [0]*M
 
 # Run Simulation
 
@@ -371,6 +372,7 @@ for I in range(M):
     X_si = []
     X_si_nom = []
     Cov_si_nom = []
+    time_taken = []
 
     r = robotarium.Robotarium(number_of_robots=N, show_figure=True, initial_conditions=initial_conditions[I], sim_in_real_time=False)
 
@@ -472,11 +474,16 @@ for I in range(M):
             obs_markers[j].set_sizes([determine_marker_size(r, obs_marker_size_m)])
 
         # Create single-integrator control inputs
-        
+        t0 = time.time()
         dxi, u_pf = Control_step(x_si,U_space_1,U_space_2,goal_points,obs_points)
+        t1 = time.time()
         D_xi.append(dxi)
         
+        time_taken.append(t1 - t0)
+        
+        
 
+        
         test_input = np.hstack((x_si.reshape(-1,), dxi.reshape(-1,))).reshape(1, -1)
         x_nom, sigma_nom = GP_nominal.predict(test_input,return_std=True)
         X_si_nom.append(x_nom)
@@ -494,6 +501,7 @@ for I in range(M):
         r.step()
     
     # save the state and control trajectory data  
+    Time[I] = np.mean(time_taken)
     UU[I] = D_xi
     XX[I] = X_si
     XN[I] = X_si_nom
