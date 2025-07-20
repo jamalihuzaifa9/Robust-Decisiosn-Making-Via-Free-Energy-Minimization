@@ -44,6 +44,7 @@ time_step = 0.033
 
 GP_nominal= pickle.load(open(r'D:\Network Security\KL Control\robotarium_python_simulator\rps\examples\DR_FREE\Experiments\GP_nominal_1.dump','rb'))
 
+traj = np.load(r'F:\Robust-Decisiosn-Making-Via-Free-Enerrgy-Minimization\Experiments\State_Dataset_Maxdiff.npy')
 
 WIND_DIRECTION = np.array([1, 1])  # Wind blowing in both positive x and y directions
 WIND_SPEED = 0.8  # Wind speed
@@ -186,6 +187,51 @@ def state_cost_with_weights(state,goal_points,obs_points,weights):
     
     return(cost)
 
+import numpy as np
+
+import numpy as np
+
+def compute_entropy(trajectories, num_traj=None, slice_length=None):
+    """
+    Estimate diffusion tensor C[x_t] from multiple trajectories.
+
+    Parameters:
+        trajectories: np.array of shape (N, T_total+1, state_dim)
+            A batch of N trajectories with T_total+1 time steps.
+        num_traj: int or None
+            Number of trajectories to use. If None, use all.
+        slice_length: int or None
+            Number of time steps to use from each trajectory (must be ≤ T_total+1).
+            If None, use all time steps.
+
+    Returns:
+        C: empirical covariance matrix of state increments, shape (state_dim, state_dim)
+    """
+    N, T_total_plus1, d = trajectories.shape
+
+    # Select subset of trajectories
+    if num_traj is not None:
+        assert num_traj <= N, f"Requested {num_traj} trajectories but only {N} available."
+        trajectories = trajectories[:num_traj]
+
+    # Select time slice from each trajectory
+    if slice_length is not None:
+        assert slice_length <= T_total_plus1, f"slice_length {slice_length} exceeds trajectory length {T_total_plus1}."
+        trajectories = trajectories[:, :slice_length, :]
+
+    # Recompute delta steps
+    deltas = trajectories[:, 1:, :] - trajectories[:, :-1, :]  # shape (N_used, slice_length-1, d)
+    deltas_flat = deltas.reshape(-1, d)  # shape ((N_used * (slice_length - 1)), d)
+
+    # Compute empirical covariance
+    mean_delta = np.mean(deltas_flat, axis=0, keepdims=True)
+    centered = deltas_flat - mean_delta
+    C = (centered.T @ centered) / (deltas_flat.shape[0] - 1)
+
+    # Add numerical jitter
+    C += 1e-8 * np.eye(d)
+
+    return C
 
 def calculate_kl_divergence(mu1, cov1, mu2, cov2):
     """
@@ -298,15 +344,18 @@ def Control_step(state,U_space_1,U_space_2,goal_points,obs_points):
             nominal_pdf = p_bar.pdf(next_sample)
             nominal_prob = nominal_pdf/np.sum(nominal_pdf) 
             
+            # XX_array = np.array([np.stack(traj) for traj in XX])  # shape (N, T, D)
+            
+            # Cov_max = compute_entropy(XX_array, num_traj=N_samples, slice_length=20)
+
+            # p_max = st.multivariate_normal(state.reshape((2,)),np.diag(Cov_max))
             
             next_state_reference = goal_points[:-1]
             cov_reference = np.array([[0.0001, 0.00002], [0.00002, 0.0001]])
             q = st.multivariate_normal(next_state_reference.reshape((2,)),cov_reference)
             nextq_sample= q.rvs(N_samples)
-            reference_pdf = q.pdf(nextq_sample)
+            reference_pdf = q.pdf(nextq_sample) + 1e-10 
             reference_prob = reference_pdf/np.sum(reference_pdf)
-           
-            
             
             eta = np.clip(calculate_kl_divergence(goal_points[:-1].reshape((2,)),cov_reference,next_state_nominal.T.reshape((2,)),cov_nom),0.0,100.0)
             

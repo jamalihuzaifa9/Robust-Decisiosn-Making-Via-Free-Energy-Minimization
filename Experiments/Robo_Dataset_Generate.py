@@ -264,20 +264,25 @@ wall_points_y = np.array([-1.0,1.0])
 N = 1
 initial_conditions = [np.array(np.mat('0.15;0.09; 0')),np.array(np.mat('-0.5;-0.2; 0')),np.array(np.mat('0.02;-0.05; 0')),np.array(np.mat('-0.05;0.25; 0'))] # can change robot initial condition in this line
 
+low = np.array([-1.5, -1.0,0.0])
+high = np.array([1.5, 1.0,0.0])
+
+# Sample a single 2D vector
+sample = np.random.uniform(low=low, high=high, size=(50,3))
 
 XX = [0]*3
 UU = [0]*3
 XN = [0]*3
 
 # Run Simulation
-
-for I in range(3):
+ 
+for I in range(50):
     
     D_xi = []
     X_si = []
     X_si_nom = []
 
-    r = robotarium.Robotarium(number_of_robots=N, show_figure=True, initial_conditions=initial_conditions[I], sim_in_real_time=False)
+    r = robotarium.Robotarium(number_of_robots=N, show_figure=True, initial_conditions=initial_conditions, sim_in_real_time=False)
 
     #obs_points = np.array(np.mat('0 0 0 0 0 0.9 -0.8 -0.8;0 0.2 0.4 0.6 0.8 -0.7 -0.9 -0.8;0 0 0 0 0 0 0 0'))
 
@@ -303,6 +308,7 @@ for I in range(3):
     goal_marker_size_m = 0.1
     obs_marker_size_m = 0.1
     #robot_marker_size_m = 0.1
+    
     marker_size_goal = determine_marker_size(r,goal_marker_size_m)
     marker_size_obs = determine_marker_size(r,obs_marker_size_m)
     #marker_size_robot = determine_marker_size(r, robot_marker_size_m)
@@ -356,16 +362,16 @@ for I in range(3):
     # save the state and control trajectory data  
     UU[I] = D_xi
     XX[I] = X_si
-    XN[I] = X_si_nom
+    # XN[I] = X_si_nom
 
     #Call at end of script to print debug information and for your script to run on the Robotarium server properly
     # r.call_at_scripts_end()
     
 XX = np.array(XX,dtype=object)
 UU = np.array(UU,dtype=object)
-XN = np.array(XN,dtype=object)
+# XN = np.array(XN,dtype=object)
 
 
 np.save('State_Dataset_new.npy',XX)
-np.save('Input_Dataset_new.npy',UU)
-np.save('State_Data_Nominal.npy',XN)
+np.save('Input_Dataset_new',UU)
+# np.save('State_Data_Nominal.npy',XN) 
