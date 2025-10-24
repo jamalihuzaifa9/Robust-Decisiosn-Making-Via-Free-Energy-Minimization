@@ -21,8 +21,8 @@ from multiprocessing import Pool
 
 control_space_size = 3 # define action space size
 
-U_space_1 = np.array(np.linspace((-1),(1),control_space_size)) # define action space for 1st input
-U_space_2 = np.array(np.linspace((-1),(1),control_space_size)) # define action sppace for 2nd input
+U_space_1 = np.array(np.linspace((-7.),(7.),control_space_size)) # define action space for 1st input
+U_space_2 = np.array(np.linspace((-7.),(7.),control_space_size)) # define action sppace for 2nd input
 
 
 time_step = 0.033
@@ -44,7 +44,7 @@ time_step = 0.033
 
 GP_nominal= pickle.load(open(r'D:\Network Security\KL Control\robotarium_python_simulator\rps\examples\DR_FREE\Experiments\GP_nominal_1.dump','rb'))
 
-traj = np.load(r'F:\Robust-Decisiosn-Making-Via-Free-Enerrgy-Minimization\Experiments\State_Dataset_Maxdiff.npy',allow_pickle=True)
+traj = np.load(r'F:\Robust-Decisiosn-Making-Via-Free-Enerrgy-Minimization\Experiments\State_Dataset_Maxdiff.npy', allow_pickle=True)
 
 WIND_DIRECTION = np.array([1, 1])  # Wind blowing in both positive x and y directions
 WIND_SPEED = 0.8  # Wind speed
@@ -161,6 +161,60 @@ def state_cost(state,goal_points,obs_points):
     
     return(cost)
 
+
+# def goal_cost(state, goal_points):
+#     """
+#     Calculate cost that creates a directed gradient towards the goal
+#     Args:
+#         state (array): Current state [x, y]
+#         goal_points (array): Goal points [x, y, _]
+#     Returns:
+#         float: Cost with directional preference
+#     """
+#     # Calculate direction vector from current position to goal
+#     direction_to_goal = np.array([goal_points[0] - state[0], goal_points[1] - state[1]])
+#     direction_to_goal = direction_to_goal / (np.linalg.norm(direction_to_goal) + 1e-6)
+    
+#     # Calculate perpendicular vector
+#     perpendicular = np.array([-direction_to_goal[1], direction_to_goal[0]])
+    
+#     # Weighted combination of:
+#     # 1. Distance along the direct path to goal (main component)
+#     # 2. Penalty for deviation from the direct path (higher weight)
+#     direct_cost = 50 * np.dot(state - goal_points[:2], direction_to_goal)**2
+#     lateral_cost = 60 * np.dot(state - goal_points[:2], perpendicular)**2
+    
+#     return direct_cost + lateral_cost
+
+# def state_cost(state, goal_points, obs_points):
+#     """
+#     Calculate state cost with directional gradient and obstacles
+#     Args:
+#         state (array): Current state
+#         goal_points (array): Goal points
+#         obs_points (array): Obstacle points
+#     Returns:
+#         float: State cost
+#     """
+#     # Obstacle avoidance component (unchanged)
+#     v = np.array([0.025, 0.025], dtype=np.float32)
+#     covar = np.diag(v)
+    
+#     gauss_sum = 0
+#     for i in range(np.size(obs_points,axis=1)):
+#         gauss_sum += 20*logpdf(state[:2], obs_points[:2,i], covar)
+    
+#     # Directional goal cost
+#     directed_goal_cost = goal_cost(state, goal_points)
+    
+#     # Boundary penalties (unchanged)
+#     boundary_cost = 2*(np.exp(-0.5*((state[0]-(-1.5))/0.03)**2)/(0.03*np.sqrt(2*np.pi)) 
+#                     + np.exp(-0.5*((state[0]-1.5)/0.03)**2)/(0.03*np.sqrt(2*np.pi)) 
+#                     + np.exp(-0.5*((state[1]-1.0)/0.03)**2)/(0.03*np.sqrt(2*np.pi)) 
+#                     + np.exp(-0.5*((state[1]-(-1.0))/0.03)**2)/(0.03*np.sqrt(2*np.pi)))
+    
+#     return 1*directed_goal_cost + gauss_sum + boundary_cost
+
 def state_cost_with_weights(state,goal_points,obs_points,weights):
     """
     Calculate state cost considering goal and obstacles using weights
@@ -186,7 +240,6 @@ def state_cost_with_weights(state,goal_points,obs_points,weights):
                 + np.exp(-0.5*((state[1]-(-1.0))/0.03)**2)/(0.03*np.sqrt(2*np.pi)))
     
     return(cost)
-
 
 def compute_entropy(trajectories, num_traj=None, slice_length=None):
     """
@@ -330,13 +383,13 @@ def Control_step(state,U_space_1,U_space_2,goal_points,obs_points):
     pf = np.zeros((control_space_size,control_space_size)) #Initialize pf
     for i in range(control_space_size):
         for j in range(control_space_size):
-            # test_input = np.hstack((state.reshape(-1,), np.array([U_space_1[i],U_space_2[j]]))).reshape(1, -1)
-            next_state_nominal = model_step(state,np.array([U_space_1[i],U_space_2[j]]),time_step)
-            # next_state_nominal, sigma_nom = GP_nominal.predict(test_input,return_cov=True)
-            # cov_nom = np.diag(sigma_nom.reshape((2,)))
-            cov_nom = np.array([[0.0001, 0.00002], [0.00002, 0.0001]])
+            test_input = np.hstack((state.reshape(-1,), np.array([U_space_1[i],U_space_2[j]]))).reshape(1, -1)
+            # next_state_nominal = nominal_model_step(state,np.array([U_space_1[i],U_space_2[j]]),time_step)
+            next_state_nominal, sigma_nom = GP_nominal.predict(test_input,return_cov=True)
+            cov_nom = np.diag(sigma_nom.reshape((2,)))
+            # cov_nom = np.array([[0.0001, 0.00002], [0.00002, 0.0001]])
             p_bar = st.multivariate_normal(next_state_nominal.reshape((2,)),cov_nom)
-            N_samples = 50
+            N_samples = 10
             next_sample = p_bar.rvs(N_samples)
             nominal_pdf = p_bar.pdf(next_sample)
             nominal_prob = nominal_pdf/np.sum(nominal_pdf) 
@@ -348,25 +401,25 @@ def Control_step(state,U_space_1,U_space_2,goal_points,obs_points):
             # p_max = st.multivariate_normal(state.reshape((2,)),np.diag(Cov_max))
             
             next_state_reference = goal_points[:-1]
-            cov_reference = np.array([[0.001, 0.0002], [0.0002, 0.001]])
+            cov_reference = np.array([[0.0001, 0.00002], [0.00002, 0.0001]])
             q = st.multivariate_normal(next_state_reference.reshape((2,)),cov_reference)
             nextq_sample= q.rvs(N_samples)
-            reference_pdf = q.pdf(nextq_sample)  
+            reference_pdf = q.pdf(nextq_sample) + 1e-10 
             reference_prob = reference_pdf/np.sum(reference_pdf)
             
-            eta = 0.5*np.clip(calculate_kl_divergence(goal_points[:-1].reshape((2,)),cov_reference,next_state_nominal.T.reshape((2,)),cov_nom),0.0,100.0)
+            eta = np.clip(calculate_kl_divergence(goal_points[:-1].reshape((2,)),cov_reference,next_state_nominal.T.reshape((2,)),cov_nom),0.0,100.0)
             
             DKL = calculate_kl_divergence(next_state_nominal.T.reshape((2,)),cov_nom,goal_points[:-1].reshape((2,)),cov_reference)
             
             cost = [state_cost(next_sample[i,:],goal_points,obs_points) for i in range(N_samples)]
             
             # DR algorithm ##########################################
-            # c_t = C_tilde(cost,eta,nominal_prob,reference_prob)
-            # exponent[i,j] = -eta-c_t
+            c_t = C_tilde(cost,eta,nominal_prob,reference_prob)
+            exponent[i,j] = -eta-c_t
             ###########################################################
             
             # uncomment following line to implement FPD, and comment line no. 318 and 319
-            exponent[i,j] = -DKL-np.sum(cost)/N_samples
+            # exponent[i,j] = -DKL-np.sum(cost)/N_samples
 
     
     exp_max = np.max(exponent)
@@ -389,18 +442,55 @@ def Control_step(state,U_space_1,U_space_2,goal_points,obs_points):
     
 
 # Define goal points and obstacle points by removing orientation from poses
-goal_points = np.array(np.mat('-1.4; -0.8; 0')) # you can change the goal points here
+goal_points = np.array(np.mat('-1.4; -0.0; 0')) # you can change the goal points here
 # obs_points_f = np.array(np.mat('0 0 0 0 0 0.8 0.8 0.8 0.8 0.8 -0.8 -0.8 -0.8 -0.8 -0.8;-0.8 -0.4 0 0.4 0.8 -0.8 -0.4 0 0.4 0.8 -0.8 -0.4 0 0.4 0.8;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0'))
 
 # obstacle points defined here the the first elements before first ';' are the x axis coordinates and 2 set of elements are y axis co-ordinates (3rd set it is for pose we leave it to zero)
 obs_points = np.array(np.mat('0 0 0 0 0 -0.8;0 0.2 0.4 0.6 0.8 -0.8;0 0 0 0 0 0'))
+
+# # Option 1: Cross-shaped obstacle formation
+# obs_points_1 = np.array(np.mat('''
+#     0 0 0 0.2 0.4 -0.2 -0.4;
+#     0 0.2 0.4 0 0 0 0;
+#     0 0 0 0 0 0 0'''))
+
+# # Option 2: U-shaped obstacle formation (creating a trap/maze)
+# obs_points_2 = np.array(np.mat('''
+#     0.5 0.5 0.5 0 -0.5 -0.5 -0.5;
+#     -0.5 0 0.5 0.5 0.5 0 -0.5;
+#     0 0 0 0 0 0 0'''))
+
+# # Option 3: Diagonal line of obstacles with satellites
+# obs_points_3 = np.array(np.mat('''
+#     -0.8 -0.4 0 0.4 0.8 0 0;
+#     -0.8 -0.4 0 0.4 0.8 0.4 -0.4;
+#     0 0 0 0 0 0 0'''))
+
+# obs_points = obs_points_1
+
+obs_points = np.array(np.mat('''
+    -0.4 -0.4 -0.4 0.4 0.4 0.4 0.4 -0.4;
+    -0.8 0 0.8 -0.8 0 0.8 -0.4 0.4;
+    0 0 0 0 0 0 0 0'''))
+
+obs_points_2 = np.array(np.mat('''
+    0.8 -0.6 -0.8  0.6 -0.4  0.4 -0.6;
+    0.7  0.4 -0.6  0.3  0.4 -0.5 -0.3;
+    0    0    0    0    0    0    0'''))
+
+# Maze-like obstacle configuration
+obs_points = np.array(np.mat('''
+    -0.8  -0.8  -0.8   0.0   0.4   0.8  0.0  0.4  0.8;
+     0.9   0.0   -0.9   0.4   0.4   0.4  -0.4  -0.4  -0.4;
+     0     0     0     0     0     0      0    0   0'''))
 
 # Instantiate Robotarium object
 N = 1
 M = 4
 
 # initial_conditions = [np.array(np.mat('1.3;0.9; 0')),np.array(np.mat('0.2;0.9; 0')),np.array(np.mat('1.3;-0.5; 0')),np.array(np.mat('-1.0;0.8; 0'))]
-initial_conditions = [np.array(np.mat('1.32;0.9; 0')),np.array(np.mat('0.5;-0.2; 0')),np.array(np.mat('1.2;-0.5; 0')),np.array(np.mat('-0.5;0.25; 0'))] # can change robot initial condition in this line
+# initial_conditions = [np.array(np.mat('0.8;-0.2; 0')),np.array(np.mat('1.32;0.9; 0')),np.array(np.mat('1.2;-0.5; 0')),np.array(np.mat('-0.0;0.9; 0'))] # can change robot initial condition in this line
+initial_conditions = [np.array(np.mat('1.3;0.9; 0')),np.array(np.mat('1.1;-0.85; 0')),np.array(np.mat('1.0;0.; 0')),np.array(np.mat('-1.2;-0.9; 0'))]
 # initial_conditions = [np.array(np.mat('1.0;0.8; 0')),np.array(np.mat('0.5;-0.2; 0')),np.array(np.mat('-0.5;-0.5; 0')),np.array(np.mat('-0.9;0.25; 0'))] # can change robot initial condition in this line
 # initial_conditions = [np.array(np.mat('-1.1;0.9; 0')),np.array(np.mat('0.9;-0.2; 0')),np.array(np.mat('-0.7;0.5; 0')),np.array(np.mat('-0.5;0.25; 0'))]
 
@@ -440,7 +530,7 @@ for I in range(M):
     X_si_nom.append(x_si)
     
     # Plotting Parameters
-    CM = np.random.rand(N+10,3) # Random Colors
+    CM = np.random.rand(N+20,3) # Random Colors
     goal_marker_size_m = 0.1
     obs_marker_size_m = 0.1
     #robot_marker_size_m = 0.1
@@ -487,28 +577,28 @@ for I in range(M):
         x_si = uni_to_si_states(x)
         X_si.append(x_si)
         
-        obs_points_col = obs_points[:-1]
-        # Loop through each column in obs_points and compare with X
-        for i in range(obs_points.shape[1]):
-            column = obs_points[:, i]
+        # obs_points_col = obs_points[:-1]
+        # # Loop through each column in obs_points and compare with X
+        # for i in range(obs_points.shape[1]):
+        #     column = obs_points[:, i]
     
-            # Check if the current column matches X
-            if np.array_equal(column, x_si):
-                print(f"Crashed into obstacle at {i}: {column}")
-                break
+        #     # Check if the current column matches X
+        #     if np.array_equal(column, x_si):
+        #         print(f"Crashed into obstacle at {i}: {column}")
+        #         break
             
         if x_si[0] <= np.array([-1.5]) or x_si[0] >= np.array([1.5])  or x_si[1] <= np.array([-1.0]) or x_si[1] >= np.array([1.0]):
             print('Touched the boundary wall')
             
             break
         
-        if is_inside_rectangle(x_si, [-0.25,-0.25],[0.15,0.85] ):
-            print(f"State entered the rectangle at: {x_si}")
-            break
+        # if is_inside_rectangle(x_si, [-0.25,-0.25],[0.15,0.85] ):
+        #     print(f"State entered the rectangle at: {x_si}")
+        #     break
         
-        if is_inside_rectangle(x_si, [-1.25,-1.0],[-0.51,-0.6]):
-            print(f"State entered the rectangle at: {x_si}")
-            break
+        # if is_inside_rectangle(x_si, [-1.25,-1.0],[-0.51,-0.6]):
+        #     print(f"State entered the rectangle at: {x_si}")
+        #     break
         
         # position_history=np.append(position_history, x[:2],axis=1)
         # r.axes.scatter(position_history[0,:],position_history[1,:], s=1, linewidth=4, color='b',linestyle='dashed')
@@ -526,6 +616,9 @@ for I in range(M):
         D_xi.append(dxi)
         
         time_taken.append(t1 - t0)
+        
+        
+
         
         test_input = np.hstack((x_si.reshape(-1,), dxi.reshape(-1,))).reshape(1, -1)
         x_nom, sigma_nom = GP_nominal.predict(test_input,return_std=True)
@@ -558,7 +651,7 @@ UU = np.array(UU,dtype=object)
 XN = np.array(XN,dtype=object)
 COVN = np.array(COVN,dtype=object)
 
-np.save(r'State_Data_Simulation_DR_noamb_eta_0.npy',XX)
-np.save(r'Input_Data_Simulation_DR_nomab_eta_0.npy',UU)
-np.save(r'State_Data_nom_nomab_eta_0.npy',XN)
-np.save(r'COV_Data_nom_noamb_eta_0.npy',COVN)
+np.save(r'State_Data_obs3_DR.npy',XX)
+np.save(r'Input_Data_obs3_DR.npy',UU)
+# np.save(r'State_Data_nom.npy',XN)
+# np.save(r'COV_Data_nom.npy',COVN)

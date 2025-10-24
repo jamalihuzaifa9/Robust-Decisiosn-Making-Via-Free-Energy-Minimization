@@ -39,7 +39,6 @@ class RobotariumEnv:
         self.x_si = self.uni_to_si_states(self.x_raw)
         
         self.r.step()
-
         
         return self.x_si.flatten()
 
