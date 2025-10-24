@@ -13,7 +13,7 @@ The following list of directories can be found in the repository, reproducing th
 - Belief Update Benchmark:
   - This folder contains the code files required to replicate the belief update benchmarking results. 
 - MaxDiff Benchmark:
-  - This folder contains the code files required to replicate the MaxDiff RL benchmarking results.
+  - This folder contains the code files required to replicate the MaxDiff RL benchmarking results on Robotarium and MuJoCo Ant Environments.
 - Assets
   - contains all the plots of the manuscript, the data from the experiments used to generate these plots, and the Robotarium movie. 
 
