@@ -64,6 +64,22 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+
+#### Install Roboptarium Pyhton Simulator
+```bash
+# Clone the robotarium simulator repository
+git clone https://github.com/robotarium/robotarium_python_simulator.git
+
+# Navigate to the simulator directory
+cd robotarium_python_simulator
+
+# Install the simulator
+pip install -e .
+
+# Return to the main project directory
+cd ..
+```
+
 ### Contents
 The following list of directories can be found in the repository, reproducing the simulation and experimental results in the manuscript.
 - Experiments:
