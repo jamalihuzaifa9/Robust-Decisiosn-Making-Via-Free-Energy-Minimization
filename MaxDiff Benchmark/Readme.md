@@ -55,4 +55,36 @@ This folder contains the code files used for replicating the **MaxDiff Reinforce
 - **replaybuffer.py**  
   Stores agent transitions for experience replay.
 ---
+
+## Ant Benchmark Subfolder
+
+The **Ant Benchmark/** subfolder contains implementations for the MuJoCo Ant-v4 environment:
+
+### DR-FREE Implementation
+- **dr_free_ant_eval.py**  
+  DR-FREE algorithm implementation for the Ant environment. This includes:
+  - Complete implementation of distributionally robust free energy minimization
+  - Necessary expressions for computing the covariance matrix of the generative model
+  - Evaluation metrics and testing procedures specific to the Ant navigation task
+
+### Baseline Implementations
+The following baseline implementations are adapted from the [MaxDiff paper repository](https://arxiv.org/html/2309.15293v4):
+
+- **maxdiff_nnmpi_ant_eval.py**  
+  MaxDiff and NN-MPPI (Neural Network Model Predictive Path Integral) implementations for the Ant environment.
+
+- **mpc_lib/**  
+  Model Predictive Control library containing:
+  - `maxdiff.py` - MaxDiff algorithm implementation
+  - `mppi.py` - Model Predictive Path Integral control
+  - `model.py` - Neural network dynamics models
+  - `entropy.py` - Entropy computation for exploration
+  - `optimizer.py` - Optimization routines for MPC
+  - `utils.py` - Utility functions for MPC operations
+
+- **Bar_plot.py**  
+  Visualization script for generating performance comparison bar plots across different methods.
+
+
+
 For theoretical background and derivations, please refer to the official MaxDiff paper linked above.
