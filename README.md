@@ -1,6 +1,69 @@
 # Robust Decision-Making Via Free Energy Minimization
 ### Introduction
 This repository collects the supporting code for the manuscript **Robust Decision-Making Via Free Energy Minimization**. The manuscript discusses the challenge of ensuring the robust performance of autonomous agents amidst environmental and training ambiguities. We introduce DR-FREE, an energy-based computational model that embeds robustness directly into decision-making via free energy minimization. By leveraging a distributionally robust extension of the free energy principle, DR-FREE yields policies that are both optimal and resilient against uncertainty, as demonstrated through real rover experiments.
+
+## Installation
+
+### System Requirements
+- **Python Version:** 3.10
+- **Operating Systems:** 
+  - Ubuntu 22.04 LTS (tested)
+  - Windows 10/11 (tested)
+- **Hardware:** CUDA-capable GPU (optional, for faster training)
+
+### Prerequisites
+- [Anaconda](https://www.anaconda.com/download) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
+- Git
+
+### Setup Instructions
+
+#### Option 1: Using Conda Environment File (Recommended)
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/Robust-Decisiosn-Making-Via-Free-Enerrgy-Minimization.git
+cd Robust-Decisiosn-Making-Via-Free-Enerrgy-Minimization
+```
+
+2. Create the conda environment from the provided YAML file:
+```bash
+conda env create -f drfree_environment.yml
+```
+
+3. Activate the environment:
+```bash
+# On Linux/MacOS
+conda activate drfree
+
+# On Windows
+conda activate drfree
+```
+
+#### Option 2: Using pip and requirements.txt
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/Robust-Decisiosn-Making-Via-Free-Enerrgy-Minimization.git
+cd Robust-Decisiosn-Making-Via-Free-Enerrgy-Minimization
+```
+
+2. Create a Python 3.10 virtual environment:
+```bash
+# On Linux/MacOS
+python3.10 -m venv venv
+source venv/bin/activate
+
+# On Windows
+python -m venv venv
+.\venv\Scripts\activate
+```
+
+3. Upgrade pip and install dependencies:
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
 ### Contents
 The following list of directories can be found in the repository, reproducing the simulation and experimental results in the manuscript.
 - Experiments:
