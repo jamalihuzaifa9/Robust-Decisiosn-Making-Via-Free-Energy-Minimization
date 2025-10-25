@@ -307,13 +307,16 @@ def C_tilde(Costs,eta,nominal_prob,reference_prob):
     ]
     
     # Solve the problem
-    result = minimize(objective, initial_guess,constraints=constraints)
-    c_tilde = np.min([np.max(np.log((nominal_prob/reference_prob)*np.exp(np.array(Costs)))),result.fun])
+    if eta > 0.0:
+        result = minimize(objective, initial_guess,constraints=constraints)
+        c_tilde = np.min([np.max(np.log((nominal_prob/reference_prob)*np.exp(np.array(Costs)))),result.fun])
+    else:
+        c_tilde = np.max(np.log((nominal_prob/reference_prob)*np.exp(np.array(Costs))))
     
     return c_tilde
 
     
-def Control_step(state,U_space_1,U_space_2,goal_points,obs_points):
+def Control_step(state,U_space_1,U_space_2,goal_points,obs_points,method='DR',model_known=False):
     
     """
     Perform an control step given an expert input
@@ -323,18 +326,28 @@ def Control_step(state,U_space_1,U_space_2,goal_points,obs_points):
         U_space_2 (array): Action space for 2nd input
         goal_points (array): Goal points
         obs_points (array): Obstacle points
+        method (str): Method to use ('DR' or 'FPD')
     Returns:
         array: Action
     """
+    state = np.asarray(state, dtype=np.float64)
+    if state.ndim == 1:
+        state = state.reshape(-1, 1)
+    
+    
     exponent = np.zeros((control_space_size,control_space_size)) #Initialize pf
     pf = np.zeros((control_space_size,control_space_size)) #Initialize pf
     for i in range(control_space_size):
         for j in range(control_space_size):
-            # test_input = np.hstack((state.reshape(-1,), np.array([U_space_1[i],U_space_2[j]]))).reshape(1, -1)
-            next_state_nominal = model_step(state,np.array([U_space_1[i],U_space_2[j]]),time_step)
-            # next_state_nominal, sigma_nom = GP_nominal.predict(test_input,return_cov=True)
-            # cov_nom = np.diag(sigma_nom.reshape((2,)))
-            cov_nom = np.array([[0.0001, 0.00002], [0.00002, 0.0001]])
+            
+            if model_known:
+                next_state_nominal = model_step(state,np.array([U_space_1[i],U_space_2[j]]),time_step)
+                cov_nom = np.array([[0.0001, 0.00002], [0.00002, 0.0001]])
+            else:
+                test_input = np.hstack((state.reshape(-1,), np.array([U_space_1[i],U_space_2[j]]))).reshape(1, -1)
+                next_state_nominal, sigma_nom = GP_nominal.predict(test_input,return_cov=True)
+                cov_nom = np.diag(sigma_nom.reshape((2,)))
+           
             p_bar = st.multivariate_normal(next_state_nominal.reshape((2,)),cov_nom)
             N_samples = 50
             next_sample = p_bar.rvs(N_samples)
@@ -354,19 +367,17 @@ def Control_step(state,U_space_1,U_space_2,goal_points,obs_points):
             reference_pdf = q.pdf(nextq_sample)  
             reference_prob = reference_pdf/np.sum(reference_pdf)
             
-            eta = 0.5*np.clip(calculate_kl_divergence(goal_points[:-1].reshape((2,)),cov_reference,next_state_nominal.T.reshape((2,)),cov_nom),0.0,100.0)
-            
-            DKL = calculate_kl_divergence(next_state_nominal.T.reshape((2,)),cov_nom,goal_points[:-1].reshape((2,)),cov_reference)
-            
             cost = [state_cost(next_sample[i,:],goal_points,obs_points) for i in range(N_samples)]
             
-            # DR algorithm ##########################################
-            # c_t = C_tilde(cost,eta,nominal_prob,reference_prob)
-            # exponent[i,j] = -eta-c_t
-            ###########################################################
+            if method=='DR':
+                # DR algorithm ##########################################
+                eta = np.clip(calculate_kl_divergence(goal_points[:-1].reshape((2,)),cov_reference,next_state_nominal.T.reshape((2,)),cov_nom),0.0,100.0)
+                c_t = C_tilde(cost,eta,nominal_prob,reference_prob)
+                exponent[i,j] = -eta-c_t
             
-            # uncomment following line to implement FPD, and comment line no. 318 and 319
-            exponent[i,j] = -DKL-np.sum(cost)/N_samples
+            elif method=='FPD':
+                DKL = calculate_kl_divergence(next_state_nominal.T.reshape((2,)),cov_nom,goal_points[:-1].reshape((2,)),cov_reference)
+                exponent[i,j] = -DKL-np.sum(cost)/N_samples
 
     
     exp_max = np.max(exponent)
@@ -384,25 +395,40 @@ def Control_step(state,U_space_1,U_space_2,goal_points,obs_points):
     adjusted_index = np.unravel_index(sample_index, pf.shape)
 
     action = np.reshape(np.array([U_space_1[adjusted_index[0]],U_space_2[adjusted_index[1]]]),(2,1))
+    action = np.asarray(action,dtype=np.float64)
     
     return(action,pf)
     
 
-# Define goal points and obstacle points by removing orientation from poses
-goal_points = np.array(np.asmatrix('-1.4; -0.8; 0')) # you can change the goal points here
-# obs_points_f = np.array(np.mat('0 0 0 0 0 0.8 0.8 0.8 0.8 0.8 -0.8 -0.8 -0.8 -0.8 -0.8;-0.8 -0.4 0 0.4 0.8 -0.8 -0.4 0 0.4 0.8 -0.8 -0.4 0 0.4 0.8;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0'))
+# # Define goal points and obstacle points by removing orientation from poses
+# goal_points = np.array(np.mat('-1.4; -0.8; 0')) # you can change the goal points here
+# # obs_points_f = np.array(np.mat('0 0 0 0 0 0.8 0.8 0.8 0.8 0.8 -0.8 -0.8 -0.8 -0.8 -0.8;-0.8 -0.4 0 0.4 0.8 -0.8 -0.4 0 0.4 0.8 -0.8 -0.4 0 0.4 0.8;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0'))
 
-# obstacle points defined here the the first elements before first ';' are the x axis coordinates and 2 set of elements are y axis co-ordinates (3rd set it is for pose we leave it to zero)
-obs_points = np.array(np.mat('0 0 0 0 0 -0.8;0 0.2 0.4 0.6 0.8 -0.8;0 0 0 0 0 0'))
+# # obstacle points defined here the the first elements before first ';' are the x axis coordinates and 2 set of elements are y axis co-ordinates (3rd set it is for pose we leave it to zero)
+# obs_points = np.array(np.mat('0 0 0 0 0 -0.8;0 0.2 0.4 0.6 0.8 -0.8;0 0 0 0 0 0'))
 
-# Instantiate Robotarium object
+# # Instantiate Robotarium object
 N = 1
-M = 4
+M = 1
 
-# initial_conditions = [np.array(np.mat('1.3;0.9; 0')),np.array(np.mat('0.2;0.9; 0')),np.array(np.mat('1.3;-0.5; 0')),np.array(np.mat('-1.0;0.8; 0'))]
-initial_conditions = [np.array(np.mat('1.32;0.9; 0')),np.array(np.mat('0.5;-0.2; 0')),np.array(np.mat('1.2;-0.5; 0')),np.array(np.mat('-0.5;0.25; 0'))] # can change robot initial condition in this line
+# # initial_conditions = [np.array(np.mat('1.3;0.9; 0')),np.array(np.mat('0.2;0.9; 0')),np.array(np.mat('1.3;-0.5; 0')),np.array(np.mat('-1.0;0.8; 0'))]
+# initial_conditions = [np.array(np.mat('1.3;0.9; 0')),np.array(np.mat('0.5;-0.2; 0')),np.array(np.mat('1.2;-0.5; 0')),np.array(np.mat('-0.5;0.25; 0'))] # can change robot initial condition in this line
 # initial_conditions = [np.array(np.mat('1.0;0.8; 0')),np.array(np.mat('0.5;-0.2; 0')),np.array(np.mat('-0.5;-0.5; 0')),np.array(np.mat('-0.9;0.25; 0'))] # can change robot initial condition in this line
 # initial_conditions = [np.array(np.mat('-1.1;0.9; 0')),np.array(np.mat('0.9;-0.2; 0')),np.array(np.mat('-0.7;0.5; 0')),np.array(np.mat('-0.5;0.25; 0'))]
+
+goal_points = np.array([[-1.4], [-0.8], [0]])
+
+obs_points = np.array([[0, 0, 0, 0, 0, -0.8],
+                      [0, 0.2, 0.4, 0.6, 0.8, -0.8],
+                      [0, 0, 0, 0, 0, 0]])
+
+# For initial conditions, replace each np.mat with np.array:
+initial_conditions = [
+    np.array([[1.3], [0.9], [0]]),
+    np.array([[0.5], [-0.2], [0]]),
+    np.array([[1.2], [-0.5], [0]]),
+    np.array([[-0.5], [0.25], [0]])
+]
 
 XX = [0]*M
 UU = [0]*M
@@ -420,7 +446,7 @@ for I in range(M):
     Cov_si_nom = []
     time_taken = []
 
-    r = robotarium.Robotarium(number_of_robots=N, show_figure=True, initial_conditions=initial_conditions[I], sim_in_real_time=False)
+    r = robotarium.Robotarium(number_of_robots=N, show_figure=False, initial_conditions=initial_conditions[I], sim_in_real_time=False)
 
     # Create single integrator position controller
     single_integrator_position_controller = create_si_position_controller()
@@ -440,34 +466,34 @@ for I in range(M):
     X_si_nom.append(x_si)
     
     # Plotting Parameters
-    CM = np.random.rand(N+10,3) # Random Colors
-    goal_marker_size_m = 0.1
-    obs_marker_size_m = 0.1
-    #robot_marker_size_m = 0.1
-    marker_size_goal = determine_marker_size(r,goal_marker_size_m)
-    marker_size_obs = determine_marker_size(r,obs_marker_size_m)
-    #marker_size_robot = determine_marker_size(r, robot_marker_size_m)
-    font_size = determine_font_size(r,0.1)
-    line_width = 5
+    # CM = np.random.rand(N+10,3) # Random Colors
+    # goal_marker_size_m = 0.1
+    # obs_marker_size_m = 0.1
+    # #robot_marker_size_m = 0.1
+    # marker_size_goal = determine_marker_size(r,goal_marker_size_m)
+    # marker_size_obs = determine_marker_size(r,obs_marker_size_m)
+    # #marker_size_robot = determine_marker_size(r, robot_marker_size_m)
+    # font_size = determine_font_size(r,0.1)
+    # line_width = 5
 
-    # Create Goal Point Markers
-    #Text with goal identification
-    goal_caption = ['G{0}'.format(ii) for ii in range(goal_points.shape[1])]
-    #Plot text for caption
-    goal_points_text = [r.axes.text(goal_points[0,ii], goal_points[1,ii], goal_caption[ii], fontsize=font_size, color='k',fontweight='bold',horizontalalignment='center',verticalalignment='center',zorder=-2)
-    for ii in range(goal_points.shape[1])]
-    goal_markers = [r.axes.scatter(goal_points[0,ii], goal_points[1,ii], s=marker_size_goal, marker='s', facecolors='none',edgecolors=CM[ii,:],linewidth=line_width,zorder=-2)
-    for ii in range(goal_points.shape[1])]
+    # # Create Goal Point Markers
+    # #Text with goal identification
+    # goal_caption = ['G{0}'.format(ii) for ii in range(goal_points.shape[1])]
+    # #Plot text for caption
+    # goal_points_text = [r.axes.text(goal_points[0,ii], goal_points[1,ii], goal_caption[ii], fontsize=font_size, color='k',fontweight='bold',horizontalalignment='center',verticalalignment='center',zorder=-2)
+    # for ii in range(goal_points.shape[1])]
+    # goal_markers = [r.axes.scatter(goal_points[0,ii], goal_points[1,ii], s=marker_size_goal, marker='s', facecolors='none',edgecolors=CM[ii,:],linewidth=line_width,zorder=-2)
+    # for ii in range(goal_points.shape[1])]
     
 
-    # Create obstacle markers
-    #Text with obstacle identification
-    obs_caption = ['OBS{0}'.format(ii) for ii in range(obs_points.shape[1])]
-    #Plot text for caption
-    obs_points_text = [r.axes.text(obs_points[0,ii], obs_points[1,ii], obs_caption[ii], fontsize=font_size, color='k',fontweight='bold',horizontalalignment='center',verticalalignment='center',zorder=-2)
-    for ii in range(obs_points.shape[1])]
-    obs_markers = [r.axes.scatter(obs_points[0,ii], obs_points[1,ii], s=marker_size_obs, marker='s', facecolors='none',edgecolors=CM[ii+1,:],linewidth=line_width,zorder=-2)
-    for ii in range(obs_points.shape[1])]
+    # # Create obstacle markers
+    # #Text with obstacle identification
+    # obs_caption = ['OBS{0}'.format(ii) for ii in range(obs_points.shape[1])]
+    # #Plot text for caption
+    # obs_points_text = [r.axes.text(obs_points[0,ii], obs_points[1,ii], obs_caption[ii], fontsize=font_size, color='k',fontweight='bold',horizontalalignment='center',verticalalignment='center',zorder=-2)
+    # for ii in range(obs_points.shape[1])]
+    # obs_markers = [r.axes.scatter(obs_points[0,ii], obs_points[1,ii], s=marker_size_obs, marker='s', facecolors='none',edgecolors=CM[ii+1,:],linewidth=line_width,zorder=-2)
+    # for ii in range(obs_points.shape[1])]
     
     # gt_img = plt.imread(r'robotarium_environemnt.jpg')
     # x_img = np.linspace(-1.5, 1.5, gt_img.shape[1])
@@ -513,17 +539,19 @@ for I in range(M):
         # position_history=np.append(position_history, x[:2],axis=1)
         # r.axes.scatter(position_history[0,:],position_history[1,:], s=1, linewidth=4, color='b',linestyle='dashed')
 
-        for j in range(goal_points.shape[1]):
-            goal_markers[j].set_sizes([determine_marker_size(r, goal_marker_size_m)])
+        # for j in range(goal_points.shape[1]):
+        #     goal_markers[j].set_sizes([determine_marker_size(r, goal_marker_size_m)])
         
-        for j in range(obs_points.shape[1]):
-            obs_markers[j].set_sizes([determine_marker_size(r, obs_marker_size_m)])
+        # for j in range(obs_points.shape[1]):
+            # obs_markers[j].set_sizes([determine_marker_size(r, obs_marker_size_m)])
 
         # Create single-integrator control inputs
         t0 = time.time()
-        dxi, u_pf = Control_step(x_si,U_space_1,U_space_2,goal_points,obs_points)
+        dxi, u_pf = Control_step(x_si,U_space_1,U_space_2,goal_points,obs_points,method='DR',model_known=False)
+        dxi = np.asarray(dxi, dtype=np.float64).reshape(2,1)
         t1 = time.time()
         D_xi.append(dxi)
+        print(x_si.flatten(), dxi.flatten())
         
         time_taken.append(t1 - t0)
         
@@ -533,6 +561,7 @@ for I in range(M):
         Cov_si_nom.append(sigma_nom)
         # Transform single integrator velocity commands to unicycle
         dxu = si_to_uni_dyn(dxi, x)
+        dxu = np.asarray(dxu, dtype=np.float64)
         
         k += 1
         if k==3000:
@@ -558,7 +587,7 @@ UU = np.array(UU,dtype=object)
 XN = np.array(XN,dtype=object)
 COVN = np.array(COVN,dtype=object)
 
-np.save(r'State_Data_Simulation_DR_noamb_eta_0.npy',XX)
-np.save(r'Input_Data_Simulation_DR_nomab_eta_0.npy',UU)
-np.save(r'State_Data_nom_nomab_eta_0.npy',XN)
-np.save(r'COV_Data_nom_noamb_eta_0.npy',COVN)
+# np.save(r'State_Data_Simulation_DR_noamb_eta_0.npy',XX)
+# np.save(r'Input_Data_Simulation_DR_nomab_eta_0.npy',UU)
+# np.save(r'State_Data_nom_nomab_eta_0.npy',XN)
+# np.save(r'COV_Data_nom_noamb_eta_0.npy',COVN)
