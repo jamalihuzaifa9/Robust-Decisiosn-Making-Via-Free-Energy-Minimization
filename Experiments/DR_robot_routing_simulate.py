@@ -389,7 +389,7 @@ def Control_step(state,U_space_1,U_space_2,goal_points,obs_points):
     
 
 # Define goal points and obstacle points by removing orientation from poses
-goal_points = np.array(np.mat('-1.4; -0.8; 0')) # you can change the goal points here
+goal_points = np.array(np.asmatrix('-1.4; -0.8; 0')) # you can change the goal points here
 # obs_points_f = np.array(np.mat('0 0 0 0 0 0.8 0.8 0.8 0.8 0.8 -0.8 -0.8 -0.8 -0.8 -0.8;-0.8 -0.4 0 0.4 0.8 -0.8 -0.4 0 0.4 0.8 -0.8 -0.4 0 0.4 0.8;0 0 0 0 0 0 0 0 0 0 0 0 0 0 0'))
 
 # obstacle points defined here the the first elements before first ';' are the x axis coordinates and 2 set of elements are y axis co-ordinates (3rd set it is for pose we leave it to zero)
