@@ -1,58 +1,6 @@
 # Experiments
 
 This folder contains the code required to perform the robot routing experiments as given in the manuscript ([see this link](https://arxiv.org/abs/2306.13928) for the preprint).
-### Prerequisites
-To run the code, the first step is to download and install the [robotarium python simulator package](https://github.com/robotarium/robotarium_python_simulator).
-### Contents 
-The **Experiments** folder contains the following files:
-
-- Code Files:
-  - *DR_robot_routing_simulate.py*: The code file implements the DR-FREE Algorithm and performs the robot routing task. The code can be submitted to the robotarium platform. 
-  - *DR_robot_routing_IOC.ipynb*: The notebook implements the robot routing experiment by solving the forward and inverse using the algorithms given in the manuscript.
-  - *FPD_robot_routing_simulate_recursion.py*: The code file implements the FPD Algorithm with backward recursion and performs the robot routing task.
-  - *GP_Model_Training.ipynb*: The notebook contains code to train GP models.
-  - *eta_policy.ipynb*: The notebook evaluates the policy computation of DR-FREE algorithm under varying ambiguity radius.
-  - *Robo_Dataset_Generate.py*: The code file generates data for training GP models.
-- Binaries:
-  - *GP_nominal_1.dump*: Stores GP model for training stage 1.
-  - *GP_nominal_2.dump*: Stores GP model for training stage 2.
-  - *GP_nominal.dump*: Stores GP model for training stage 3.
-  - *Weights_DR.npy*: Stores the weights obtained for the reconstructed cost that can replicate the results in the manuscript.
-
-### DR_robot_routing_simulate.py
-
-The file **DR_robot_routing_simulate.py** implements the simulation environment for the DR-FREE framework on a robot routing task. It loads a pre-trained Gaussian Process model to predict nominal state transitions and defines dynamic models, cost functions, and robust control steps that integrate obstacle avoidance, goal attainment, and environmental uncertainties. Leveraging the Robotarium simulation tools the script simulates robot navigation within a bounded workspace populated with obstacles and boundaries. Throughout the simulation, it records state trajectories and control inputs, which are then saved for further analysis.
-
-- The file also implements an ambiguity-unaware agent, the control algorithm can be switched by commenting out the DR-FREE algorithm at lines 318 and 319, and uncommenting lines 322.
-
-### DR_robot_routing_IOC.ipynb
-
-- DR-FREE Algorithm:
-The first part of the code implements the DR-FREE algorithm given in the manuscript and generates robot trajectory data.
-
-- Belief update:
-The second part of the code uses these data files to estimate the cost of the agent using the belief update algorithm of the manuscript. 
-We define a function that forms the feature vector.  Next, we obtain the *Weights_DR.npy* by solving the convex belief update problem. The figure below shows the placement of the feature points on the Robotarium work area with corresponding weight values.
-![feature_point_grid](https://github.com/user-attachments/assets/f749acb2-1d2f-4234-8e71-0b165b21e832)
-We use the weights to formulate the estimated cost and test the effectiveness of the estimated cost by performing the robot routing cost while avoiding obstacles.
-
-### eta_policy.ipynb
-
-The notebook shows how DR-FREE policy changes as a function of the ambiguity radius $(\eta(x_{k-1},u_{k}))$
-
-![Policy_diffusion](https://github.com/user-attachments/assets/1077ab0d-bf87-4afd-805c-1787e19a9595)
-Figure. By increasing the radius of ambiguity $(\eta(x_{k-1},u_{k}))$, the DR-FREE policy (left) becomes proportional to the generative model $(q_{k}^{(u)})$ and ambiguity radius $(\eta(x_{k-1},u_{k}))$ (right).
-
-### GP_Model_Training.ipynb
-
-The notebook implements GP training by leveraging the *scikit-learn* library.
-
-
-
-
-# Experiments
-
-This folder contains the code required to perform the robot routing experiments as given in the manuscript ([see this link](https://arxiv.org/abs/2306.13928) for the preprint).
 
 ### Prerequisites
 To run the code, the first step is to download and install the [robotarium python simulator package](https://github.com/robotarium/robotarium_python_simulator).
@@ -76,7 +24,7 @@ The **Experiments** folder contains the following files:
     - Complex multi-obstacle scenarios
     - Dynamic obstacle arrangements
     
-  - **DR_robot_routing_IOC.ipynb**: The notebook implements the robot routing experiment by solving the forward and inverse problems using the algorithms given in the manuscript. Includes:
+  - **DR_robot_routing.ipynb**: The notebook implements the robot routing experiment by solving the forward and inverse problems using the algorithms given in the manuscript. Includes:
     - Forward problem: DR-FREE trajectory generation
     - Inverse problem: Cost reconstruction using belief update algorithm
     
@@ -128,7 +76,7 @@ This file extends the DR-FREE implementation to handle various obstacle configur
 
 The file uses the same DR-FREE core algorithm but applies it to different workspace configurations, validating the robustness and generalization capability of the approach.
 
-### DR_robot_routing_IOC.ipynb
+### DR_robot_routing.ipynb
 
 - **DR-FREE Algorithm (Forward Problem)**:
 The first part of the code implements the DR-FREE algorithm given in the manuscript and generates robot trajectory data under model uncertainty and environmental ambiguity.
@@ -182,7 +130,7 @@ python DR_robot_routing_new_obstacles.py
 python FPD_robot_routing_simulate_recursion.py
 ```
 
-**Generate training data:**
+**Generate GP training data:**
 ```bash
 python Robo_Dataset_Generate.py
 ```
@@ -191,5 +139,4 @@ python Robo_Dataset_Generate.py
 
 - All simulation files save trajectory data in `.npy` format for post-processing and analysis
 - The `show_figure` parameter can be toggled to enable/disable visualization during simulation
-- Computation times are logged and saved in `avg_control_times.npy`
 - For real-world Robotarium deployment, ensure `sim_in_real_time=True` in the Robotarium initialization
