@@ -24,12 +24,6 @@ def load_and_process_data(file_path):
     # Convert to numpy array
     cumsum_data = np.array(padded_data)
     
-    # if label == 'FPD':
-    #     # Add negative bias and small noise to the cumulative sums
-    #     bias = -0.5 * np.arange(max_length)  # Progressive negative bias
-    #     noise = np.random.normal(0, 0.1, (len(cumsum_data), max_length))
-    #     cumsum_data = cumsum_data + bias + noise
-    
     # Compute statistics
     mean = np.mean(cumsum_data, axis=0)
     std = np.std(cumsum_data, axis=0)
@@ -117,32 +111,12 @@ plt.yticks(fontsize=14)
 plt.tight_layout()
 plt.xlim(1, 1000)
 
-# Plot each method
-# for file_path, labels_colors in methods.items():
-#     for label, color in labels_colors:
-#         mean, std, length = load_and_process_data(file_path, label)
-#         steps = np.arange(length)
-        
-#         plt.plot(steps, mean, label=label, color=color, linewidth=2)
-#         plt.fill_between(steps, mean - std, mean + std, 
-#                         alpha=0.2, color=color)
-
-# Customize plot
-# plt.xlabel('Timestep', labelpad=10)
-# plt.ylabel('Cumulative Reward', labelpad=10)
-# plt.grid(True, linestyle='--', alpha=0.7)
-# plt.legend(loc='upper left', frameon=True, framealpha=1.0)
 
 # Save and show plot
 plt.tight_layout()
 plt.savefig('ant_cumulative_rewards.jpg', dpi=500, bbox_inches='tight')
 plt.show()
 
-# # Save and show plot
-# plt.tight_layout()
-# plt.savefig('ant_cumulative_rewards.svg', dpi=500, bbox_inches='tight')
-# plt.show()
-# print("Cumulative rewards plot saved as 'ant_cumulative_rewards.svg'")
 
 
 # Create a second figure for bar plot

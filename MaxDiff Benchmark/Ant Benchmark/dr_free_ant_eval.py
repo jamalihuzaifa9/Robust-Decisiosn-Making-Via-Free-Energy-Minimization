@@ -200,8 +200,8 @@ class DRFreeAgent:
         """Cost function for HalfCheetah (negative reward)"""
         # HalfCheetah reward: forward velocity - control cost
         velocity = state[8] if len(state) > 8 else 0
-        control_cost = 0.1 * np.sum(np.square(action))  # Control cost
-        cost = -1*velocity + control_cost  # Negative reward is cost
+        # control_cost = 0.1 * np.sum(np.square(action))  # Control cost
+        cost = -1*velocity + 0. * np.sum(np.square(action))  # Negative reward is cost
         return cost
     
     def calculate_kl_divergence(self, mu1, cov1, mu2, cov2):
@@ -278,102 +278,11 @@ class DRFreeAgent:
         )
         return actions
     
-    # def dr_free_control_step(self, state, goal_state=None):
-    #     """DR-FREE control step with sampling using pretrained model"""
-    #     # Sample candidate actions
-    #     action_samples = 0.5*self.sample_actions()
-        
-    #     # Reference distribution mean (goal-oriented or state-keeping)
-    #     if goal_state is not None:
-    #         ref_mean = goal_state
-    #     else:
-    #         ref_mean = state[:29]
-        
-    #     # Compute policy for each action sample
-    #     log_probs = []
-        
-    #     for action in action_samples:
-    #         # Predict next state distribution using pretrained model
-    #         next_state_mean, next_state_cov, reward = self.predict_next_state(state, action)
-            
-    #         # Sample next states from nominal distribution
-    #         nominal_dist = multivariate_normal(next_state_mean, next_state_cov)
-    #         next_state_samples = nominal_dist.rvs(self.n_state_samples)
-    #         if next_state_samples.ndim == 1:
-    #             next_state_samples = next_state_samples.reshape(1, -1)
-            
-    #         # Compute probabilities
-    #         nominal_probs = nominal_dist.pdf(next_state_samples)
-    #         nominal_probs = nominal_probs / np.sum(nominal_probs)
-            
-    #          # Create structured reference covariance matrix for ant locomotion
-    #         reference_variances = np.zeros(self.state_dim)
-            
-    #         # State indices for Ant-v5 (first 29 dimensions)
-    #         # Torso height and orientation (very small variance for stability)
-    #         reference_variances[2] = 0.001  # z-pos (height)
-    #         reference_variances[3:7] = 0.001  # quaternion orientation
-            
-    #         # Forward velocity and yaw (moderate variance)
-    #         reference_variances[14:17] = 0.05  # linear velocities
-    #         reference_variances[20] = 0.05  # yaw velocity
-            
-    #         # Angular velocities for roll/pitch (small variance)
-    #         reference_variances[18:20] = 0.01  # roll and pitch velocities
-            
-    #         # Joint angles and velocities (larger variance for gait exploration)
-    #         reference_variances[7:14] = 0.1  # joint angles
-    #         reference_variances[21:29] = 0.1  # joint velocities
-            
-    #         # Create diagonal covariance matrix
-    #         self.reference_cov = np.diag(reference_variances)
-            
-    #         # Add small off-diagonal terms for joint angle-velocity coupling
-    #         for i in range(7):  # 7 joints
-    #             joint_pos_idx = 7 + i  # joint position index
-    #             joint_vel_idx = 21 + i  # joint velocity index
-    #             coupling = 0.01  # coupling strength
-    #             self.reference_cov[joint_pos_idx, joint_vel_idx] = coupling
-    #             self.reference_cov[joint_vel_idx, joint_pos_idx] = coupling
-            
-    #         print("✅ Created structured reference covariance matrix for ant locomotion")
-                
-    #         # Reference distribution
-    #         reference_dist = multivariate_normal(next_state_mean, self.reference_cov)
-    #         reference_probs = reference_dist.pdf(next_state_samples)
-    #         reference_probs = reference_probs / (np.sum(reference_probs) + 1e-10)
-            
-    #         # Compute KL divergence
-    #         eta = self.calculate_kl_divergence(
-    #             next_state_mean, next_state_cov, ref_mean, self.reference_cov
-    #         )
-            
-    #         # Compute costs
-    #         costs = [self.compute_cost(sample, action, goal_state) for sample in next_state_samples]
-            
-    #         # Solve DR optimization
-    #         # c_tilde = self.c_tilde_optimization(costs, eta, nominal_probs, reference_probs)
-            
-    #         # Store log probability
-    #         log_prob = -eta + float(reward) - 0.*np.mean(costs)
-    #         log_probs.append(log_prob)
-        
-    #     # Convert to probabilities
-    #     log_probs = np.array(log_probs)
-    #     log_probs = log_probs - np.max(log_probs)  # Numerical stability
-    #     probs = np.exp(log_probs)
-    #     probs = probs / np.sum(probs)
-        
-    #     # Sample action according to policy
-    #     action_idx = np.random.choice(len(action_samples), p=probs)
-    #     selected_action = action_samples[action_idx]
-        
-    #     return selected_action, probs
     
     def dr_free_control_step(self, state, goal_state=None):
         """DR-FREE control step with sampling using pretrained model"""
         # Sample candidate actions
-        action_samples = 0.5*self.sample_actions()
+        action_samples = .5*self.sample_actions()
         
         # Reference distribution mean (goal-oriented or state-keeping)
         if goal_state is not None:
@@ -445,7 +354,8 @@ class DRFreeAgent:
             
             # Compute costs and log probability
             costs = [self.compute_cost(sample, action, goal_state) for sample in next_state_samples]
-            log_prob = -eta + float(reward) - 0.*np.mean(costs)
+            c_tilde = self.c_tilde_optimization(costs, eta, nominal_probs, reference_probs)
+            log_prob = -eta - c_tilde
             log_probs.append(log_prob)
         
         # Rest of the method remains the same
@@ -459,42 +369,6 @@ class DRFreeAgent:
         
         return selected_action, probs
     
-    # def evaluate_episode(self, max_steps=1000, render=False):
-    #     """Evaluate a single episode and store timestep rewards"""
-    #     state = self.env.reset()
-    #     # Handle different gym versions
-    #     if isinstance(state, tuple):
-    #         state = state[0]
-                
-    #     total_reward = 0
-    #     timestep_rewards = []  # List to store rewards at each timestep
-        
-    #     for step in range(max_steps):
-    #         # Get action from DR-FREE policy
-    #         action, _ = self.dr_free_control_step(state)
-            
-    #         # Step environment
-    #         step_result = self.env.step(action)
-    #         if len(step_result) == 5:
-    #             # New gym API (>= 0.26)
-    #             next_state, reward, terminated, truncated, _ = step_result
-    #             done = terminated or truncated
-    #         else:
-    #             # Old gym API
-    #             next_state, reward, done, _ = step_result
-            
-    #         # Store reward for this timestep
-    #         timestep_rewards.append(reward)
-    #         total_reward += reward
-    #         state = next_state
-            
-    #         if done:
-    #             break
-        
-    #         if render:
-    #             self.env.render()
-    
-        return total_reward, step + 1, timestep_rewards
     
     def calculate_prediction_kl_divergence(self, predicted_mean, predicted_cov, actual_state):
         """
@@ -624,24 +498,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
-# import numpy as np
-# import pickle
-
-# def convert_numpy_to_pickle():
-#     # Load the numpy file
-#     data = np.load(r'D:\DR_FREE_ICRA\code\ant_drfree_rewards_log.npy', allow_pickle=True).item()
-    
-#     # Extract only the timestep data
-#     timestep_rewards = data['timestep_data']
-    
-#     # Save to pickle file
-#     with open('ant_timestep_rewards.pkl', 'wb') as f:
-#         pickle.dump(timestep_rewards, f)
-    
-#     print(f"Successfully converted timestep rewards to pickle format")
-#     print(f"Number of episodes: {len(timestep_rewards)}")
-#     print(f"Average episode length: {np.mean([len(ep) for ep in timestep_rewards]):.1f} steps")
-
-# if __name__ == "__main__":
-#     convert_numpy_to_pickle()    
+     
