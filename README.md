@@ -122,4 +122,5 @@ https://github.com/user-attachments/assets/6f488a94-5981-42ad-8888-0a18ce6d943b
 
 
 ### Authors and Contributors 
-Author of the code and simulations: *Hozefa Jesawada* (hjesawada@unisa.it)
+Author of the code and simulations: *Hozefa Jesawada* (hj3000@nyu.edu)
+
